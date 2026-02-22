@@ -1,0 +1,21 @@
+{
+  "name": "landit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LandIt - Job Placement Platform",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run serve",
+    "build:frontend": "cd frontend && npm run build",
+    "dev:backend": "cd backend && npm run dev",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

@@ -215,7 +215,7 @@
     
     <script>
         // Initialize Supabase
-        const supabase = window.supabase.createClient(
+        const db = window.supabase.createClient(
             'https://wbcgymgqqrhwgshkdfcx.supabase.co',
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiY2d5bWdxcXJod2dzaGtkZmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyNzU5NTQsImV4cCI6MjA4MDg1MTk1NH0.js40qIOVH_PPaHyzo0AjTuiVsPxRy9PAaHkTtcR_P1A'
         );
@@ -227,14 +227,14 @@
             console.log('🚀 Initializing LandIt app...');
             
             // Check if user is already signed in
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await db.auth.getSession();
             if (session) {
                 currentUser = session.user;
                 showDashboard();
             }
 
             // Listen for auth changes
-            supabase.auth.onAuthStateChange((event, session) => {
+            db.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN') {
                     currentUser = session.user;
                     showDashboard();
@@ -283,7 +283,7 @@
             }
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await db.auth.signInWithPassword({
                     email,
                     password
                 });
@@ -308,7 +308,7 @@
             }
 
             try {
-                const { data, error } = await supabase.auth.signUp({
+                const { data, error } = await db.auth.signUp({
                     email,
                     password,
                     options: {
@@ -329,7 +329,7 @@
 
         async function signOut() {
             try {
-                const { error } = await supabase.auth.signOut();
+                const { error } = await db.auth.signOut();
                 if (error) throw error;
             } catch (error) {
                 console.error('Sign out error:', error);
