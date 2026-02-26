@@ -12,7 +12,7 @@ import { supabase } from '../supabase/client';
  * @param userSkills     - Array of skill names the student has
  * @param requiredSkills - Skills the placement marks as 'required'
  * @param desiredSkills  - Skills the placement marks as 'preferred' or 'desired'
- * @returns score (0–100), matched skill names, missing skill names
+ * @returns score (0-100), matched skill names, missing skill names
  */
 function calculateMatchScore(
   userSkills: string[],
@@ -47,6 +47,14 @@ function calculateMatchScore(
   return { score, matched, missing };
 }
 
+type SkillRow = { skills: { name: string } | { name: string }[] | null };
+
+function extractSkillName(skills: SkillRow['skills']): string | null {
+  if (!skills) return null;
+  if (Array.isArray(skills)) return skills[0]?.name ?? null;
+  return skills.name ?? null;
+}
+
 /**
  * Runs the full matching algorithm for a given student user.
  *
@@ -67,9 +75,8 @@ export async function runMatchingForUser(userId: string): Promise<void> {
 
   if (skillError) throw new Error(skillError.message);
 
-  type SkillRow = { skills: { name: string } | null };
-  const userSkills: string[] = (skillRows as SkillRow[])
-    .map(s => s.skills?.name)
+  const userSkills: string[] = (skillRows as unknown as SkillRow[])
+    .map(s => extractSkillName(s.skills))
     .filter((n): n is string => Boolean(n));
 
   // Step 2: Fetch all active placements with their skills
