@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LandIt - Authentication Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: Inter, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f8fafc;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header { 
+            background: linear-gradient(135deg, #2563eb, #3b82f6); 
+            color: white; 
+            padding: 2rem; 
+            text-align: center;
+        }
+        .content { padding: 2rem; }
+        .auth-form { 
+            display: none; 
+            max-width: 400px; 
+            margin: 0 auto;
+        }
+        .auth-form.active { display: block; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { 
+            display: block; 
+            margin-bottom: 0.5rem; 
+            font-weight: 500; 
+            color: #374151;
+        }
+        .form-group input { 
+            width: 100%; 
+            padding: 0.75rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            font-size: 1rem;
+        }
+        .btn { 
+            padding: 0.75rem 1.5rem; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            transition: all 0.2s;
+        }
+        .btn-primary { 
+            background: #2563eb; 
+            color: white; 
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { 
+            background: #6b7280; 
+            color: white; 
+        }
+        .btn-secondary:hover { background: #4b5563; }
+        .dashboard { 
+            display: none; 
+        }
+        .dashboard.active { display: block; }
+        .user-info { 
+            background: #f3f4f6; 
+            padding: 1rem; 
+            border-radius: 8px; 
+            margin-bottom: 2rem;
+        }
+        .section { 
+            margin-bottom: 2rem; 
+            padding: 1.5rem; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 8px;
+        }
+        .section h3 { 
+            margin-top: 0; 
+            color: #1f2937;
+        }
+        .alert { 
+            padding: 1rem; 
+            border-radius: 6px; 
+            margin-bottom: 1rem;
+        }
+        .alert-success { 
+            background: #d1fae5; 
+            color: #065f46; 
+            border: 1px solid #a7f3d0;
+        }
+        .alert-error { 
+            background: #fee2e2; 
+            color: #991b1b; 
+            border: 1px solid #fca5a5;
+        }
+        .skills-list { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 0.5rem;
+        }
+        .skill-tag { 
+            background: #dbeafe; 
+            color: #1e40af; 
+            padding: 0.25rem 0.75rem; 
+            border-radius: 20px; 
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 LandIt</h1>
+            <p>Your AI-Powered Job Placement Platform</p>
+        </div>
+        
+        <div class="content">
+            <!-- Authentication Forms -->
+            <div id="auth-section">
+                <!-- Sign In Form -->
+                <div id="signin-form" class="auth-form active">
+                    <h2>Sign In</h2>
+                    <div id="auth-message"></div>
+                    
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signin-email" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signin-password" placeholder="Enter your password">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" onclick="signIn()" style="width: 100%;">Sign In</button>
+                    </div>
+                    <p style="text-align: center;">
+                        Don't have an account? 
+                        <a href="#" onclick="showSignUp()" style="color: #2563eb;">Sign Up</a>
+                    </p>
+                </div>
+
+                <!-- Sign Up Form -->
+                <div id="signup-form" class="auth-form">
+                    <h2>Create Account</h2>
+                    <div id="signup-message"></div>
+                    
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="signup-firstname" placeholder="Enter your first name">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="signup-lastname" placeholder="Enter your last name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signup-email" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signup-password" placeholder="Create a password">
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="signup-role" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;">
+                            <option value="student">Student</option>
+                            <option value="employer">Employer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" onclick="signUp()" style="width: 100%;">Create Account</button>
+                    </div>
+                    <p style="text-align: center;">
+                        Already have an account? 
+                        <a href="#" onclick="showSignIn()" style="color: #2563eb;">Sign In</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Dashboard -->
+            <div id="dashboard" class="dashboard">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>Welcome to your Dashboard</h2>
+                    <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+                </div>
+
+                <div class="user-info">
+                    <h3>👤 Profile Information</h3>
+                    <div id="user-details">Loading...</div>
+                </div>
+
+                <div class="section">
+                    <h3>🎯 Your Skills</h3>
+                    <div id="user-skills">Loading skills...</div>
+                    <button class="btn btn-primary" onclick="findJobMatches()" style="margin-top: 1rem;">Find Job Matches</button>
+                </div>
+
+                <div class="section">
+                    <h3>💼 Job Recommendations</h3>
+                    <div id="job-matches">Click "Find Job Matches" to see recommendations</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // Initialize Supabase
+        const db = window.supabase.createClient(
+            'https://wbcgymgqqrhwgshkdfcx.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiY2d5bWdxcXJod2dzaGtkZmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyNzU5NTQsImV4cCI6MjA4MDg1MTk1NH0.js40qIOVH_PPaHyzo0AjTuiVsPxRy9PAaHkTtcR_P1A'
+        );
+
+        let currentUser = null;
+
+        // Initialize app
+        window.addEventListener('load', async function() {
+            console.log('🚀 Initializing LandIt app...');
+            
+            // Check if user is already signed in
+            const { data: { session } } = await db.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                showDashboard();
+            }
+
+            // Listen for auth changes
+            db.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN') {
+                    currentUser = session.user;
+                    showDashboard();
+                } else if (event === 'SIGNED_OUT') {
+                    currentUser = null;
+                    showAuth();
+                }
+            });
+        });
+
+        // UI Functions
+        function showSignIn() {
+            document.getElementById('signin-form').classList.add('active');
+            document.getElementById('signup-form').classList.remove('active');
+        }
+
+        function showSignUp() {
+            document.getElementById('signup-form').classList.add('active');
+            document.getElementById('signin-form').classList.remove('active');
+        }
+
+        function showAuth() {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('dashboard').classList.remove('active');
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            loadUserProfile();
+        }
+
+        function showMessage(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert ${isError ? 'alert-error' : 'alert-success'}">${message}</div>`;
+        }
+
+        // Auth Functions
+        async function signIn() {
+            const email = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+
+            if (!email || !password) {
+                showMessage('auth-message', 'Please enter email and password', true);
+                return;
+            }
+
+            try {
+                const { data, error } = await db.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) throw error;
+                showMessage('auth-message', 'Sign in successful!');
+            } catch (error) {
+                showMessage('auth-message', error.message, true);
+            }
+        }
+
+        async function signUp() {
+            const firstName = document.getElementById('signup-firstname').value;
+            const lastName = document.getElementById('signup-lastname').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const role = document.getElementById('signup-role').value;
+
+            if (!firstName || !lastName || !email || !password) {
+                showMessage('signup-message', 'Please fill in all fields', true);
+                return;
+            }
+
+            try {
+                const { data, error } = await db.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            first_name: firstName,
+                            last_name: lastName,
+                            role: role
+                        }
+                    }
+                });
+
+                if (error) throw error;
+                showMessage('signup-message', 'Account created! Check your email for verification.');
+            } catch (error) {
+                showMessage('signup-message', error.message, true);
+            }
+        }
+
+        async function signOut() {
+            try {
+                const { error } = await db.auth.signOut();
+                if (error) throw error;
+            } catch (error) {
+                console.error('Sign out error:', error);
+            }
+        }
+
+        // Dashboard Functions
+        async function loadUserProfile() {
+            if (!currentUser) return;
+
+            try {
+                // Get user profile
+                const { data: profile, error } = await supabase
+                    .from('users')
+                    .select(`
+                        *,
+                        student_skills (
+                            proficiency_level,
+                            skills (name, category)
+                        )
+                    `)
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') {
+                    throw error;
+                }
+
+                // Display user info
+                const userDetails = document.getElementById('user-details');
+                if (profile) {
+                    userDetails.innerHTML = `
+                        <p><strong>Name:</strong> ${profile.first_name} ${profile.last_name}</p>
+                        <p><strong>Email:</strong> ${profile.email}</p>
+                        <p><strong>Role:</strong> ${profile.role}</p>
+                        <p><strong>Member since:</strong> ${new Date(profile.created_at).toLocaleDateString()}</p>
+                    `;
+
+                    // Display skills
+                    const skillsContainer = document.getElementById('user-skills');
+                    if (profile.student_skills && profile.student_skills.length > 0) {
+                        const skillsHtml = profile.student_skills.map(ss => 
+                            `<span class="skill-tag">${ss.skills.name} (Level ${ss.proficiency_level})</span>`
+                        ).join('');
+                        skillsContainer.innerHTML = `<div class="skills-list">${skillsHtml}</div>`;
+                    } else {
+                        skillsContainer.innerHTML = '<p>No skills added yet. <a href="#" onclick="addSampleSkills()">Add some sample skills</a></p>';
+                    }
+                } else {
+                    // Create user profile if it doesn't exist
+                    await createUserProfile();
+                }
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                document.getElementById('user-details').innerHTML = '<p>Error loading profile</p>';
+            }
+        }
+
+        async function createUserProfile() {
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .insert({
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        first_name: currentUser.user_metadata?.first_name || '',
+                        last_name: currentUser.user_metadata?.last_name || '',
+                        role: currentUser.user_metadata?.role || 'student'
+                    });
+
+                if (error) throw error;
+                loadUserProfile(); // Reload after creating
+            } catch (error) {
+                console.error('Error creating profile:', error);
+            }
+        }
+
+        async function addSampleSkills() {
+            try {
+                // Get some skills from the database
+                const { data: skills } = await supabase
+                    .from('skills')
+                    .select('*')
+                    .limit(3);
+
+                if (skills && skills.length > 0) {
+                    // Add skills to user
+                    const skillsToAdd = skills.map(skill => ({
+                        user_id: currentUser.id,
+                        skill_id: skill.id,
+                        proficiency_level: Math.floor(Math.random() * 5) + 1,
+                        source: 'manual'
+                    }));
+
+                    const { error } = await supabase
+                        .from('student_skills')
+                        .insert(skillsToAdd);
+
+                    if (error) throw error;
+                    loadUserProfile(); // Reload to show new skills
+                }
+            } catch (error) {
+                console.error('Error adding skills:', error);
+            }
+        }
+
+        async function findJobMatches() {
+            const matchesContainer = document.getElementById('job-matches');
+            matchesContainer.innerHTML = '⏳ Finding your perfect job matches...';
+
+            try {
+                // Get user skills
+                const { data: userSkills } = await supabase
+                    .from('student_skills')
+                    .select(`
+                        proficiency_level,
+                        skills (name, category)
+                    `)
+                    .eq('user_id', currentUser.id);
+
+                // Get placements with skills
+                const { data: placements } = await supabase
+                    .from('placements')
+                    .select(`
+                        *,
+                        companies (name, industry),
+                        placement_skills (
+                            importance,
+                            skills (name, category)
+                        )
+                    `)
+                    .eq('is_active', true);
+
+                if (!placements || placements.length === 0) {
+                    matchesContainer.innerHTML = '<p>No active job placements found.</p>';
+                    return;
+                }
+
+                // Calculate matches (simplified algorithm)
+                const userSkillNames = userSkills?.map(us => us.skills.name) || [];
+                
+                const matches = placements.map(placement => {
+                    const requiredSkills = placement.placement_skills || [];
+                    let score = 0;
+                    let totalWeight = 0;
+                    
+                    requiredSkills.forEach(ps => {
+                        const weight = ps.importance === 'required' ? 3 : ps.importance === 'preferred' ? 2 : 1;
+                        totalWeight += weight;
+                        
+                        if (userSkillNames.includes(ps.skills.name)) {
+                            score += weight;
+                        }
+                    });
+                    
+                    const fitScore = totalWeight > 0 ? Math.round((score / totalWeight) * 100) : 0;
+                    
+                    return {
+                        ...placement,
+                        fitScore,
+                        matchingSkills: requiredSkills.filter(ps => userSkillNames.includes(ps.skills.name)),
+                        missingSkills: requiredSkills.filter(ps => !userSkillNames.includes(ps.skills.name))
+                    };
+                }).sort((a, b) => b.fitScore - a.fitScore);
+
+                // Display matches
+                const matchesHtml = matches.map(match => `
+                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <h4 style="margin: 0; color: #1f2937;">${match.title}</h4>
+                            <span style="background: ${match.fitScore >= 70 ? '#10b981' : match.fitScore >= 50 ? '#f59e0b' : '#ef4444'}; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem;">
+                                ${match.fitScore}% Match
+                            </span>
+                        </div>
+                        <p style="margin: 0.5rem 0; color: #6b7280;"><strong>${match.companies.name}</strong> • ${match.location}</p>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem;">${match.description}</p>
+                        ${match.salary_range ? `<p style="margin: 0.5rem 0; color: #059669;"><strong>Salary:</strong> $${match.salary_range.toLocaleString()}</p>` : ''}
+                        ${match.matchingSkills.length > 0 ? `
+                            <p style="margin: 0.5rem 0; font-size: 0.875rem;">
+                                <strong>Your matching skills:</strong> 
+                                ${match.matchingSkills.map(s => s.skills.name).join(', ')}
+                            </p>
+                        ` : ''}
+                        ${match.missingSkills.length > 0 ? `
+                            <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #dc2626;">
+                                <strong>Skills to develop:</strong> 
+                                ${match.missingSkills.map(s => s.skills.name).join(', ')}
+                            </p>
+                        ` : ''}
+                        ${match.application_link ? `
+                            <a href="${match.application_link}" target="_blank" class="btn btn-primary" style="display: inline-block; margin-top: 0.5rem; text-decoration: none;">
+                                Apply Now
+                            </a>
+                        ` : ''}
+                    </div>
+                `).join('');
+
+                matchesContainer.innerHTML = matchesHtml || '<p>No matches found. Try adding more skills to your profile!</p>';
+
+            } catch (error) {
+                console.error('Error finding matches:', error);
+                matchesContainer.innerHTML = '<p>Error finding job matches. Please try again.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
