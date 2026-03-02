@@ -1,6 +1,11 @@
 import { Response } from 'express';
 import { supabase } from '../supabase/client';
 import { AuthRequest } from '../middleware/auth';
+import OpenAI from 'openai';
+
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 export async function uploadCV(req: AuthRequest, res: Response): Promise<void> {
   if (!req.file) {
@@ -53,6 +58,92 @@ export async function uploadCV(req: AuthRequest, res: Response): Promise<void> {
   }
 
   res.status(201).json(data);
+}
+
+export async function extractSkills(req: AuthRequest, res: Response): Promise<void> {
+  const { text } = req.body;
+  const userId = req.user!.id;
+
+  if (!text || typeof text !== 'string' || text.trim().length < 20) {
+    res.status(400).json({ error: 'No CV text provided' });
+    return;
+  }
+
+  // Ask GPT to extract skills from the raw CV text
+  let extractedNames: string[] = [];
+  try {
+    const completion = await getOpenAI().chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a CV skill extractor. Extract all technical and professional skills from the CV text provided. ' +
+            'Return ONLY a valid JSON array of skill name strings — no explanation, no markdown, just the array. ' +
+            'Rules: be specific (e.g. "React" not "web development"), normalise capitalisation (e.g. "JavaScript", "AWS", "PostgreSQL"), ' +
+            'include languages, frameworks, tools, cloud platforms, databases, and methodologies, remove duplicates, max 50 skills.',
+        },
+        { role: 'user', content: text.slice(0, 12000) },
+      ],
+      temperature: 0,
+    });
+
+    const raw = completion.choices[0].message.content?.trim() ?? '[]';
+    // Strip any accidental markdown fences
+    const clean = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '');
+    extractedNames = JSON.parse(clean);
+    if (!Array.isArray(extractedNames)) extractedNames = [];
+  } catch (err) {
+    res.status(500).json({ error: 'OpenAI extraction failed: ' + (err as Error).message });
+    return;
+  }
+
+  if (extractedNames.length === 0) {
+    res.json({ skills: [] });
+    return;
+  }
+
+  // For each extracted skill name, find-or-create a row in the skills table
+  const skillIds: { id: string; name: string }[] = [];
+  for (const name of extractedNames) {
+    const trimmed = name.trim();
+    if (!trimmed) continue;
+
+    // Try to find existing skill (case-insensitive)
+    const { data: existing } = await supabase
+      .from('skills')
+      .select('id, name')
+      .ilike('name', trimmed)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      skillIds.push(existing);
+    } else {
+      // Create new skill
+      const { data: created } = await supabase
+        .from('skills')
+        .insert({ name: trimmed, category: 'extracted' })
+        .select('id, name')
+        .single();
+      if (created) skillIds.push(created);
+    }
+  }
+
+  // Upsert all matched skills into student_skills
+  if (skillIds.length > 0) {
+    const upserts = skillIds.map(s => ({
+      user_id: userId,
+      skill_id: s.id,
+      proficiency_level: 3,
+      source: 'cv',
+    }));
+    await supabase
+      .from('student_skills')
+      .upsert(upserts, { onConflict: 'user_id,skill_id' });
+  }
+
+  res.json({ skills: skillIds });
 }
 
 export async function getMyCV(req: AuthRequest, res: Response): Promise<void> {

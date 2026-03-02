@@ -33,9 +33,11 @@ export async function runMatchingForUser(userId: string): Promise<void> {
 
   if (skillError) throw new Error(skillError.message);
 
-  type SkillRow = { skills: { name: string } | null };
-  const userSkills: string[] = (skillRows as SkillRow[])
-    .map(s => s.skills?.name)
+  const userSkills: string[] = (skillRows as unknown as { skills: unknown }[])
+    .map(s => {
+      const sk = s.skills as { name: string } | null;
+      return sk?.name ?? null;
+    })
     .filter((n): n is string => Boolean(n));
 
   // Get all active placements with their skills via placement_skills junction table

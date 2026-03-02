@@ -1,19 +1,15 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-
 import authRoutes from './routes/auth.routes';
 import placementRoutes from './routes/placement.routes';
 import cvRoutes from './routes/cv.routes';
 import matchRoutes from './routes/match.routes';
 import bookmarkRoutes from './routes/bookmark.routes';
 
-dotenv.config();
-
 const app = express();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: true,
   credentials: true,
 }));
 
