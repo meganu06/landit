@@ -317,9 +317,10 @@
         .modal-overlay.open { display: flex; }
         .modal {
             background: white; border-radius: 16px;
-            padding: 2rem; width: 90%; max-width: 420px;
+            padding: 2rem; width: 90%; max-width: 460px;
             position: relative;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-height: 90vh; overflow-y: auto;
         }
         .modal h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
         .modal-close {
@@ -335,7 +336,50 @@
             font-size: 0.95rem; font-family: inherit; outline: none;
         }
         .form-group input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-group select {
+            width: 100%; padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; outline: none; background: white;
+        }
+        .form-group select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
         .form-link { color: #6b7280; font-size: 0.85rem; text-align: center; margin-top: 1rem; }
+
+        /* ── PROFILE TAB ─────────────────────────── */
+        .profile-avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white; font-size: 1.6rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .profile-header {
+            display: flex; align-items: center; gap: 1.25rem;
+            margin-bottom: 1.5rem; padding-bottom: 1.25rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .profile-header-info h3 { font-size: 1.2rem; font-weight: 700; }
+        .profile-header-info p  { color: #6b7280; font-size: 0.875rem; margin-top: 0.2rem; }
+        .profile-form { display: grid; gap: 1rem; }
+        .profile-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .profile-form-row { grid-template-columns: 1fr; } }
+        .profile-field label { display: block; font-size: 0.85rem; font-weight: 500; color: #374151; margin-bottom: 0.4rem; }
+        .profile-field input, .profile-field select, .profile-field textarea {
+            width: 100%; padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.9rem; font-family: inherit; outline: none; background: white;
+        }
+        .profile-field input:focus, .profile-field select:focus, .profile-field textarea:focus {
+            border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        .profile-field textarea { resize: vertical; min-height: 80px; }
+        .profile-links { display: flex; gap: 0.75rem; margin-top: 0.25rem; flex-wrap: wrap; }
+        .profile-link-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: #f3f4f6; color: #374151;
+            padding: 0.3rem 0.8rem; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 500; text-decoration: none;
+        }
+        .profile-link-badge:hover { background: #e5e7eb; }
         .form-link a { color: #2563eb; cursor: pointer; text-decoration: none; }
         #auth-message { margin-top: 0.75rem; }
     </style>
@@ -375,6 +419,7 @@
         <button class="tab-btn" onclick="switchTab('skills')">My Skills</button>
         <button class="tab-btn" onclick="switchTab('cv')">CV</button>
         <button class="tab-btn" onclick="switchTab('bookmarks')">Bookmarks</button>
+        <button class="tab-btn" onclick="switchTab('profile')">Profile</button>
     </nav>
 
     <div class="content">
@@ -467,6 +512,79 @@
             <div id="bookmarks-list"><div class="loading">Loading bookmarks...</div></div>
         </div>
 
+        <!-- PROFILE -->
+        <div id="tab-profile" class="tab-panel">
+            <div class="card" style="max-width:680px;">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">?</div>
+                    <div class="profile-header-info">
+                        <h3 id="profile-full-name">—</h3>
+                        <p id="profile-email-display">—</p>
+                        <div class="profile-links" id="profile-ext-links" style="margin-top:0.5rem;"></div>
+                    </div>
+                </div>
+
+                <div class="card-title">Edit Profile</div>
+                <div class="profile-form">
+                    <div class="profile-form-row">
+                        <div class="profile-field">
+                            <label>First Name</label>
+                            <input type="text" id="profile-firstname" placeholder="First">
+                        </div>
+                        <div class="profile-field">
+                            <label>Last Name</label>
+                            <input type="text" id="profile-lastname" placeholder="Last">
+                        </div>
+                    </div>
+                    <div class="profile-field">
+                        <label>Degree Programme</label>
+                        <select id="profile-degree">
+                            <option value="">Not specified</option>
+                            <option>BSc Computer Science</option>
+                            <option>MEng Computer Science</option>
+                            <option>BSc Computer Science &amp; Mathematics</option>
+                            <option>BSc Computer Science with Artificial Intelligence</option>
+                            <option>BSc Computer Science for Business</option>
+                            <option>BSc Software Engineering</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="profile-field">
+                        <label>Year of Study</label>
+                        <select id="profile-year">
+                            <option value="">Not specified</option>
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4 / Masters</option>
+                        </select>
+                    </div>
+                    <div class="profile-field">
+                        <label>About Me</label>
+                        <textarea id="profile-bio" placeholder="Brief intro — interests, goals, experience..."></textarea>
+                    </div>
+                    <div class="profile-form-row">
+                        <div class="profile-field">
+                            <label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                            <input type="url" id="profile-linkedin" placeholder="https://linkedin.com/in/...">
+                        </div>
+                        <div class="profile-field">
+                            <label>GitHub URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                            <input type="url" id="profile-github" placeholder="https://github.com/...">
+                        </div>
+                    </div>
+                    <div class="profile-field">
+                        <label>Preferred Location</label>
+                        <input type="text" id="profile-location" placeholder="e.g. London, Remote, Anywhere...">
+                    </div>
+                    <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.5rem;">
+                        <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+                        <div id="profile-message" style="flex:1;margin-bottom:0;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -492,26 +610,77 @@
 
         <div id="form-signup" style="display:none;">
             <h2>Create Account</h2>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                <div class="form-group">
-                    <label>First Name</label>
-                    <input type="text" id="signup-firstname" placeholder="First">
+            <!-- Step progress bar -->
+            <div style="display:flex;gap:0.4rem;margin-bottom:1.25rem;">
+                <div id="step-dot-1" style="flex:1;height:3px;border-radius:2px;background:#2563eb;transition:background 0.2s;"></div>
+                <div id="step-dot-2" style="flex:1;height:3px;border-radius:2px;background:#e5e7eb;transition:background 0.2s;"></div>
+            </div>
+
+            <!-- Step 1: credentials -->
+            <div id="signup-step-1">
+                <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 1 of 2 — Account details</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="signup-firstname" placeholder="First">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="signup-lastname" placeholder="Last">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Last Name</label>
-                    <input type="text" id="signup-lastname" placeholder="Last">
+                    <label>Bath University Email</label>
+                    <input type="email" id="signup-email" placeholder="you@bath.ac.uk">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signup-password" placeholder="Min. 6 characters">
+                </div>
+                <button class="btn btn-primary" style="width:100%;" onclick="signupNext()">Next →</button>
+            </div>
+
+            <!-- Step 2: profile -->
+            <div id="signup-step-2" style="display:none;">
+                <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 2 of 2 — Your profile</p>
+                <div class="form-group">
+                    <label>Degree Programme</label>
+                    <select id="signup-degree">
+                        <option value="">Select your degree...</option>
+                        <option>BSc Computer Science</option>
+                        <option>MEng Computer Science</option>
+                        <option>BSc Computer Science &amp; Mathematics</option>
+                        <option>BSc Computer Science with Artificial Intelligence</option>
+                        <option>BSc Computer Science for Business</option>
+                        <option>BSc Software Engineering</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Year of Study</label>
+                    <select id="signup-year">
+                        <option value="">Select year...</option>
+                        <option value="1">Year 1</option>
+                        <option value="2">Year 2</option>
+                        <option value="3">Year 3</option>
+                        <option value="4">Year 4 / Masters</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Location <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                    <input type="text" id="signup-location" placeholder="e.g. London, Remote, Anywhere...">
+                </div>
+                <div class="form-group">
+                    <label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                    <input type="url" id="signup-linkedin" placeholder="https://linkedin.com/in/...">
+                </div>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn-secondary" style="flex:1;" onclick="signupBack()">← Back</button>
+                    <button class="btn btn-primary" style="flex:2;" onclick="handleSignUp()">Create Account</button>
                 </div>
             </div>
-            <div class="form-group">
-                <label>Bath University Email</label>
-                <input type="email" id="signup-email" placeholder="you@bath.ac.uk">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="signup-password" placeholder="Min. 6 characters">
-            </div>
-            <button class="btn btn-primary" style="width:100%;" onclick="handleSignUp()">Create Account</button>
-            <div id="auth-message"></div>
+
+            <div id="signup-message" style="margin-top:0.75rem;"></div>
             <p class="form-link">Have an account? <a onclick="openModal('signin')">Sign in</a></p>
         </div>
     </div>
@@ -578,7 +747,7 @@ function switchTab(tab) {
 
 // ── LOAD DASHBOARD DATA ───────────────────────────────────────────────
 async function loadDashboard() {
-    await Promise.all([loadSkills(), loadPlacements(), loadCV()]);
+    await Promise.all([loadSkills(), loadPlacements(), loadCV(), loadProfile()]);
     runMatching();
     loadBookmarks();
 }
@@ -971,59 +1140,122 @@ async function extractTextFromPDF(file) {
 }
 
 async function extractAndSaveSkills(text, msgEl) {
-    const { data: allSkills, error } = await sb.from('skills').select('id, name, category');
-    if (error || !allSkills || allSkills.length === 0) return;
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { showMsg(msgEl, 'Not authenticated.', 'error'); return; }
 
-    const matched = [];
-    for (const skill of allSkills) {
-        // Escape special regex chars (handles C++, C#, .NET etc.)
-        const escaped = skill.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // Match whole word/token — allow # and + at end of word (C#, C++)
-        const pattern = new RegExp(`(?<![a-zA-Z0-9])${escaped}(?![a-zA-Z0-9])`, 'i');
-        if (pattern.test(text)) {
-            matched.push(skill);
-        }
-    }
+    const res = await fetch('http://localhost:3001/api/cv/extract-skills', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ text }),
+    });
 
-    if (matched.length === 0) {
-        showMsg(msgEl, 'CV uploaded. No recognised skills found — you can add them manually.', 'success');
+    const json = await res.json();
+
+    if (!res.ok) {
+        showMsg(msgEl, `CV uploaded but skill extraction failed: ${json.error}`, 'error');
         return;
     }
 
-    const upserts = matched.map(s => ({
-        user_id: currentUser.id,
-        skill_id: s.id,
-        proficiency_level: 3,
-        source: 'cv',
-    }));
-
-    const { error: upsertErr } = await sb.from('student_skills').upsert(upserts, { onConflict: 'user_id,skill_id' });
-    if (upsertErr) {
-        showMsg(msgEl, `CV uploaded but skill save failed: ${upsertErr.message}`, 'error');
+    const skills = json.skills || [];
+    if (skills.length === 0) {
+        showMsg(msgEl, 'CV uploaded. No skills identified — you can add them manually.', 'success');
         return;
     }
 
-    showMsg(msgEl, `CV uploaded! Found ${matched.length} skills: ${matched.map(s => s.name).join(', ')}`, 'success');
+    showMsg(msgEl, `CV uploaded! Found ${skills.length} skills: ${skills.map(s => s.name).join(', ')}`, 'success');
     runMatching();
 }
 
 // ── BOOKMARKS ─────────────────────────────────────────────────────────
 async function toggleBookmark(placementId, btn) {
     const isSaved = btn.textContent.includes('Saved');
+    btn.disabled = true;
 
     if (isSaved) {
-        await sb.from('bookmarks').delete()
+        const { error } = await sb.from('bookmarks').delete()
             .eq('user_id', currentUser.id)
             .eq('placement_id', placementId);
-        btn.textContent = '🔖 Save';
+        if (error) { alert('Could not remove bookmark: ' + error.message); }
+        else { btn.textContent = '🔖 Save'; }
     } else {
-        await sb.from('bookmarks').upsert(
+        const { error } = await sb.from('bookmarks').upsert(
             { user_id: currentUser.id, placement_id: placementId },
             { onConflict: 'user_id,placement_id' }
         );
-        btn.textContent = '🔖 Saved';
+        if (error) { alert('Could not save bookmark: ' + error.message); }
+        else { btn.textContent = '🔖 Saved'; }
     }
+
+    btn.disabled = false;
     loadBookmarks();
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────────
+let profileData = null;
+
+async function loadProfile() {
+    const { data, error } = await sb
+        .from('users')
+        .select('*')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+    if (!error && data) {
+        profileData = data;
+        renderProfile(data);
+        // Update navbar with real name from DB
+        const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || currentUser.email.split('@')[0];
+        document.getElementById('navbar-welcome').textContent = `Welcome, ${name}`;
+    }
+}
+
+function renderProfile(data) {
+    const first = data.first_name || '';
+    const last  = data.last_name  || '';
+    const initials = ((first[0] || '') + (last[0] || '')).toUpperCase() || '?';
+    document.getElementById('profile-avatar').textContent = initials;
+    document.getElementById('profile-full-name').textContent = `${first} ${last}`.trim() || '—';
+    document.getElementById('profile-email-display').textContent = data.email || currentUser.email || '—';
+
+    document.getElementById('profile-firstname').value = first;
+    document.getElementById('profile-lastname').value  = last;
+    document.getElementById('profile-degree').value    = data.degree_programme || '';
+    document.getElementById('profile-year').value      = data.year_of_study   || '';
+    document.getElementById('profile-bio').value       = data.bio              || '';
+    document.getElementById('profile-linkedin').value  = data.linkedin_url     || '';
+    document.getElementById('profile-github').value    = data.github_url       || '';
+    document.getElementById('profile-location').value  = data.location_preference || '';
+
+    // Render quick-links under the avatar
+    const links = [];
+    if (data.linkedin_url) links.push(`<a href="${data.linkedin_url}" target="_blank" class="profile-link-badge">LinkedIn</a>`);
+    if (data.github_url)   links.push(`<a href="${data.github_url}"   target="_blank" class="profile-link-badge">GitHub</a>`);
+    document.getElementById('profile-ext-links').innerHTML = links.join('');
+}
+
+async function saveProfile() {
+    const msgEl = document.getElementById('profile-message');
+    const updates = {
+        first_name:          document.getElementById('profile-firstname').value.trim(),
+        last_name:           document.getElementById('profile-lastname').value.trim(),
+        degree_programme:    document.getElementById('profile-degree').value   || null,
+        year_of_study:       document.getElementById('profile-year').value     ? parseInt(document.getElementById('profile-year').value) : null,
+        bio:                 document.getElementById('profile-bio').value.trim()      || null,
+        linkedin_url:        document.getElementById('profile-linkedin').value.trim() || null,
+        github_url:          document.getElementById('profile-github').value.trim()   || null,
+        location_preference: document.getElementById('profile-location').value.trim() || null,
+    };
+
+    const { error } = await sb.from('users').update(updates).eq('id', currentUser.id);
+    if (error) { showMsg(msgEl, error.message, 'error'); return; }
+
+    profileData = { ...profileData, ...updates };
+    renderProfile(profileData);
+    const name = `${updates.first_name} ${updates.last_name}`.trim();
+    if (name) document.getElementById('navbar-welcome').textContent = `Welcome, ${name}`;
+    showMsg(msgEl, 'Profile saved!', 'success');
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────
@@ -1036,16 +1268,39 @@ async function handleSignIn() {
     if (error) { showMsg(msgEl, error.message, 'error'); }
 }
 
-async function handleSignUp() {
-    const firstName = document.getElementById('signup-firstname').value;
-    const lastName  = document.getElementById('signup-lastname').value;
-    const email     = document.getElementById('signup-email').value;
+function signupNext() {
+    const firstName = document.getElementById('signup-firstname').value.trim();
+    const lastName  = document.getElementById('signup-lastname').value.trim();
+    const email     = document.getElementById('signup-email').value.trim();
     const password  = document.getElementById('signup-password').value;
-    const msgEl     = document.getElementById('auth-message');
+    const msgEl     = document.getElementById('signup-message');
 
-    if (!email.endsWith('@bath.ac.uk')) {
-        showMsg(msgEl, 'Only @bath.ac.uk email addresses are allowed.', 'error'); return;
-    }
+    if (!firstName || !lastName) { showMsg(msgEl, 'Please enter your full name.', 'error'); return; }
+    if (!email.endsWith('@bath.ac.uk')) { showMsg(msgEl, 'Only @bath.ac.uk email addresses are allowed.', 'error'); return; }
+    if (password.length < 8) { showMsg(msgEl, 'Password must be at least 8 characters.', 'error'); return; }
+
+    msgEl.innerHTML = '';
+    document.getElementById('signup-step-1').style.display = 'none';
+    document.getElementById('signup-step-2').style.display = 'block';
+    document.getElementById('step-dot-2').style.background = '#2563eb';
+}
+
+function signupBack() {
+    document.getElementById('signup-step-2').style.display = 'none';
+    document.getElementById('signup-step-1').style.display = 'block';
+    document.getElementById('step-dot-2').style.background = '#e5e7eb';
+}
+
+async function handleSignUp() {
+    const firstName = document.getElementById('signup-firstname').value.trim();
+    const lastName  = document.getElementById('signup-lastname').value.trim();
+    const email     = document.getElementById('signup-email').value.trim();
+    const password  = document.getElementById('signup-password').value;
+    const degree    = document.getElementById('signup-degree').value || null;
+    const year      = document.getElementById('signup-year').value ? parseInt(document.getElementById('signup-year').value) : null;
+    const location  = document.getElementById('signup-location').value.trim() || null;
+    const linkedin  = document.getElementById('signup-linkedin').value.trim() || null;
+    const msgEl     = document.getElementById('signup-message');
 
     const { error } = await sb.auth.signUp({
         email, password,
@@ -1053,6 +1308,17 @@ async function handleSignUp() {
     });
 
     if (error) { showMsg(msgEl, error.message, 'error'); return; }
+
+    // Save extended profile fields right after signup (session is briefly active)
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+        await sb.from('users').update({
+            degree_programme: degree,
+            year_of_study: year,
+            location_preference: location,
+            linkedin_url: linkedin,
+        }).eq('id', session.user.id);
+    }
 
     await sb.auth.signOut();
     showMsg(msgEl, 'Account created! Please sign in.', 'success');
@@ -1066,7 +1332,12 @@ function openModal(mode) {
     document.getElementById('auth-modal').classList.add('open');
     document.getElementById('form-signin').style.display = mode === 'signin' ? 'block' : 'none';
     document.getElementById('form-signup').style.display = mode === 'signup' ? 'block' : 'none';
-    document.getElementById('auth-message').innerHTML = '';
+    document.getElementById('auth-message').innerHTML  = '';
+    document.getElementById('signup-message').innerHTML = '';
+    // Reset signup to step 1
+    document.getElementById('signup-step-1').style.display = 'block';
+    document.getElementById('signup-step-2').style.display = 'none';
+    document.getElementById('step-dot-2').style.background = '#e5e7eb';
 }
 function closeModal() { document.getElementById('auth-modal').classList.remove('open'); }
 document.getElementById('auth-modal').addEventListener('click', e => {
