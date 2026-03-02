@@ -380,6 +380,49 @@
             font-size: 0.8rem; font-weight: 500; text-decoration: none;
         }
         .profile-link-badge:hover { background: #e5e7eb; }
+
+        /* ── LANDING ROLE CARDS ──────────────────── */
+        .landing-roles {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .role-card {
+            border: 2px solid #e5e7eb; border-radius: 14px;
+            padding: 1.25rem 1rem; cursor: pointer;
+            transition: all 0.15s; text-align: center;
+        }
+        .role-card:hover { border-color: #2563eb; background: #eff6ff; }
+        .role-card .role-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .role-card .role-title { font-weight: 700; font-size: 1rem; color: #111827; }
+        .role-card .role-desc  { font-size: 0.78rem; color: #6b7280; margin-top: 0.25rem; }
+
+        /* ── STAFF PORTAL ────────────────────────── */
+        #staff-portal { display: none; min-height: 100vh; }
+        .staff-table { width: 100%; border-collapse: collapse; }
+        .staff-table th {
+            text-align: left; font-size: 0.8rem; font-weight: 600;
+            color: #6b7280; padding: 0.6rem 1rem;
+            background: #f8fafc; border-bottom: 1px solid #e5e7eb;
+        }
+        .staff-table td {
+            padding: 0.9rem 1rem; border-bottom: 1px solid #f3f4f6;
+            font-size: 0.875rem; vertical-align: middle;
+        }
+        .staff-table tr:last-child td { border-bottom: none; }
+        .staff-table tr:hover td { background: #fafafa; }
+        .staff-card {
+            background: white; border: 1px solid #e5e7eb;
+            border-radius: 12px; overflow: hidden;
+        }
+        .placement-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .placement-form-grid { grid-template-columns: 1fr; } }
+        .form-group textarea {
+            width: 100%; padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; outline: none;
+            resize: vertical; min-height: 90px;
+        }
+        .form-group textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
         .form-link a { color: #2563eb; cursor: pointer; text-decoration: none; }
         #auth-message { margin-top: 0.75rem; }
     </style>
@@ -396,9 +439,21 @@
             <div class="feature-chip"><span class="icon">📄</span>CV Analysis</div>
             <div class="feature-chip"><span class="icon">🚀</span>Skill Gaps</div>
         </div>
+        <p style="font-size:0.85rem;color:#9ca3af;margin-bottom:0.75rem;">I am a...</p>
+        <div class="landing-roles">
+            <div class="role-card" onclick="selectRole('student')">
+                <div class="role-icon">🎓</div>
+                <div class="role-title">Student</div>
+                <div class="role-desc">Find and apply for placements</div>
+            </div>
+            <div class="role-card" onclick="selectRole('admin')">
+                <div class="role-icon">🏢</div>
+                <div class="role-title">Placement Staff</div>
+                <div class="role-desc">Manage placement opportunities</div>
+            </div>
+        </div>
         <div class="landing-btns">
-            <button class="btn btn-primary" onclick="openModal('signin')">Sign In</button>
-            <button class="btn btn-secondary" onclick="openModal('signup')">Sign Up</button>
+            <button class="btn btn-secondary" onclick="openModal('signin')">Sign In</button>
         </div>
     </div>
 </div>
@@ -588,6 +643,140 @@
     </div>
 </div>
 
+<!-- ── STAFF PORTAL ───────────────────────────────────────────────────── -->
+<div id="staff-portal">
+    <header class="navbar">
+        <div class="navbar-brand">🎯 LandIt <span style="font-size:0.75rem;opacity:0.7;font-weight:400;">Staff Portal</span></div>
+        <span class="navbar-user" id="staff-navbar-welcome"></span>
+        <div class="navbar-actions">
+            <button id="staff-btn-signout">Sign Out</button>
+        </div>
+    </header>
+
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="switchStaffTab('placements', this)">Placements</button>
+        <button class="tab-btn" onclick="switchStaffTab('companies', this)">Companies</button>
+    </nav>
+
+    <div class="content">
+
+        <!-- PLACEMENTS -->
+        <div id="staff-tab-placements" class="tab-panel active">
+            <div class="section-header">
+                <h2>Manage Placements</h2>
+                <button class="btn btn-primary" onclick="openPlacementModal()">+ Add Placement</button>
+            </div>
+            <div class="staff-card">
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Company</th>
+                            <th>Location</th>
+                            <th>Deadline</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="staff-placements-body">
+                        <tr><td colspan="6" class="loading" style="padding:2rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COMPANIES -->
+        <div id="staff-tab-companies" class="tab-panel">
+            <div class="section-header">
+                <h2>Companies</h2>
+                <button class="btn btn-primary" onclick="openCompanyModal()">+ Add Company</button>
+            </div>
+            <div class="staff-card">
+                <table class="staff-table">
+                    <thead>
+                        <tr><th>Name</th><th>Industry</th><th>Website</th><th></th></tr>
+                    </thead>
+                    <tbody id="staff-companies-body">
+                        <tr><td colspan="4" class="loading" style="padding:2rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── PLACEMENT MODAL ─────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="placement-modal">
+    <div class="modal" style="max-width:620px;">
+        <button class="modal-close" onclick="closePlacementModal()">×</button>
+        <h2 id="placement-modal-title">Add Placement</h2>
+
+        <div class="form-group">
+            <label>Company</label>
+            <select id="p-company"><option value="">Select company...</option></select>
+        </div>
+        <div class="form-group">
+            <label>Role Title</label>
+            <input type="text" id="p-title" placeholder="e.g. Software Engineer Intern">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="p-description" placeholder="Role overview, responsibilities..."></textarea>
+        </div>
+        <div class="placement-form-grid">
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="p-location" placeholder="e.g. London / Remote">
+            </div>
+            <div class="form-group">
+                <label>Salary (£/year, optional)</label>
+                <input type="number" id="p-salary" placeholder="e.g. 28000">
+            </div>
+        </div>
+        <div class="placement-form-grid">
+            <div class="form-group">
+                <label>Deadline (optional)</label>
+                <input type="date" id="p-deadline">
+            </div>
+            <div class="form-group">
+                <label>Application Link (optional)</label>
+                <input type="url" id="p-link" placeholder="https://...">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Required Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+            <input type="text" id="p-required-skills" placeholder="Python, SQL, React...">
+        </div>
+        <div class="form-group">
+            <label>Preferred Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+            <input type="text" id="p-preferred-skills" placeholder="Docker, AWS, TypeScript...">
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
+            <button class="btn btn-secondary" onclick="closePlacementModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="savePlacement()">Save Placement</button>
+        </div>
+        <div id="placement-modal-msg" style="margin-top:0.75rem;"></div>
+    </div>
+</div>
+
+<!-- ── COMPANY MODAL ───────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="company-modal">
+    <div class="modal" style="max-width:480px;">
+        <button class="modal-close" onclick="document.getElementById('company-modal').classList.remove('open')">×</button>
+        <h2 id="company-modal-title">Add Company</h2>
+        <div class="form-group"><label>Company Name</label><input type="text" id="c-name" placeholder="Accenture"></div>
+        <div class="form-group"><label>Industry</label><input type="text" id="c-industry" placeholder="Technology, Finance..."></div>
+        <div class="form-group"><label>Website URL (optional)</label><input type="url" id="c-website" placeholder="https://..."></div>
+        <div class="form-group"><label>Description (optional)</label><textarea id="c-description" placeholder="Brief company overview..."></textarea></div>
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('company-modal').classList.remove('open')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveCompany()">Save Company</button>
+        </div>
+        <div id="company-modal-msg" style="margin-top:0.75rem;"></div>
+    </div>
+</div>
+
 <!-- ── AUTH MODAL ─────────────────────────────────────────────────────── -->
 <div class="modal-overlay" id="auth-modal">
     <div class="modal">
@@ -609,7 +798,7 @@
         </div>
 
         <div id="form-signup" style="display:none;">
-            <h2>Create Account</h2>
+            <h2 id="signup-form-title">Create Account</h2>
             <!-- Step progress bar -->
             <div style="display:flex;gap:0.4rem;margin-bottom:1.25rem;">
                 <div id="step-dot-1" style="flex:1;height:3px;border-radius:2px;background:#2563eb;transition:background 0.2s;"></div>
@@ -643,28 +832,30 @@
             <!-- Step 2: profile -->
             <div id="signup-step-2" style="display:none;">
                 <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 2 of 2 — Your profile</p>
-                <div class="form-group">
-                    <label>Degree Programme</label>
-                    <select id="signup-degree">
-                        <option value="">Select your degree...</option>
-                        <option>BSc Computer Science</option>
-                        <option>MEng Computer Science</option>
-                        <option>BSc Computer Science &amp; Mathematics</option>
-                        <option>BSc Computer Science with Artificial Intelligence</option>
-                        <option>BSc Computer Science for Business</option>
-                        <option>BSc Software Engineering</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Year of Study</label>
-                    <select id="signup-year">
-                        <option value="">Select year...</option>
-                        <option value="1">Year 1</option>
-                        <option value="2">Year 2</option>
-                        <option value="3">Year 3</option>
-                        <option value="4">Year 4 / Masters</option>
-                    </select>
+                <div id="signup-step2-student-fields">
+                    <div class="form-group">
+                        <label>Degree Programme</label>
+                        <select id="signup-degree">
+                            <option value="">Select your degree...</option>
+                            <option>BSc Computer Science</option>
+                            <option>MEng Computer Science</option>
+                            <option>BSc Computer Science &amp; Mathematics</option>
+                            <option>BSc Computer Science with Artificial Intelligence</option>
+                            <option>BSc Computer Science for Business</option>
+                            <option>BSc Software Engineering</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Year of Study</label>
+                        <select id="signup-year">
+                            <option value="">Select year...</option>
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4 / Masters</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Preferred Location <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
@@ -702,6 +893,16 @@ let currentUser = null;
 let userSkills = [];      // [{skill_name, proficiency_level, id, skills:{name}}]
 let allPlacements = [];   // placements with companies + placement_skills
 let matchScores = {};     // placement_id → score
+let pendingRole = 'student'; // set when user picks a role on landing
+
+function selectRole(role) {
+    pendingRole = role;
+    // Update signup form title/step-2 visibility based on role
+    const isStaff = role === 'admin';
+    document.getElementById('signup-form-title').textContent = isStaff ? 'Create Staff Account' : 'Create Account';
+    document.getElementById('signup-step2-student-fields').style.display = isStaff ? 'none' : 'block';
+    openModal('signup');
+}
 
 // ── AUTH STATE ────────────────────────────────────────────────────────
 sb.auth.onAuthStateChange((event, session) => {
@@ -726,23 +927,44 @@ window.addEventListener('load', async () => {
 function showLanding() {
     document.getElementById('landing').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('staff-portal').style.display = 'none';
 }
 
-function showDashboard() {
-    document.getElementById('landing').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
+async function showDashboard() {
     closeModal();
-    const name = currentUser.user_metadata?.first_name || currentUser.email.split('@')[0];
-    document.getElementById('navbar-welcome').textContent = `Welcome, ${name}`;
-    loadDashboard();
+    // Fetch role from users table to decide which portal to show
+    const { data: profile } = await sb.from('users').select('role, first_name, last_name').eq('id', currentUser.id).maybeSingle();
+    const role = profile?.role || 'student';
+    const name = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || currentUser.email.split('@')[0];
+
+    document.getElementById('landing').style.display = 'none';
+
+    if (role === 'admin') {
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('staff-portal').style.display = 'block';
+        document.getElementById('staff-navbar-welcome').textContent = `Welcome, ${name}`;
+        loadStaffData();
+    } else {
+        document.getElementById('staff-portal').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('navbar-welcome').textContent = `Welcome, ${name}`;
+        loadDashboard();
+    }
 }
 
 // ── TAB SWITCHING ─────────────────────────────────────────────────────
 function switchTab(tab) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#dashboard .tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('#dashboard .tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`tab-${tab}`).classList.add('active');
     event.target.classList.add('active');
+}
+
+function switchStaffTab(tab, btn) {
+    document.querySelectorAll('#staff-portal .tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('#staff-portal .tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`staff-tab-${tab}`).classList.add('active');
+    btn.classList.add('active');
 }
 
 // ── LOAD DASHBOARD DATA ───────────────────────────────────────────────
@@ -805,10 +1027,35 @@ async function loadCV() {
                     <div class="cv-meta">Uploaded ${date}</div>
                 </div>
                 <a href="${data.file_url}" target="_blank" class="btn btn-secondary btn-sm">View</a>
+                <button class="btn btn-danger btn-sm" onclick="deleteCV('${data.id}', '${data.file_url}')">Delete</button>
             </div>`;
     } else {
         container.innerHTML = '<p style="color:#9ca3af;font-size:0.875rem;margin-bottom:1rem;">No CV uploaded yet.</p>';
     }
+}
+
+async function deleteCV(cvId, fileUrl) {
+    if (!confirm('Delete your CV? This will also remove all skills extracted from it.')) return;
+
+    // Delete from storage
+    const urlPath = fileUrl.split('/storage/v1/object/public/cvs/')[1];
+    if (urlPath) {
+        await sb.storage.from('cvs').remove([decodeURIComponent(urlPath)]);
+    }
+
+    // Delete DB record
+    const { error } = await sb.from('cv').delete().eq('id', cvId);
+    if (error) { alert('Failed to delete CV: ' + error.message); return; }
+
+    // Remove skills that came from CV
+    await sb.from('student_skills')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('source', 'cv');
+
+    loadCV();
+    loadSkills();
+    runMatching();
 }
 
 async function loadBookmarks() {
@@ -1313,6 +1560,7 @@ async function handleSignUp() {
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
         await sb.from('users').update({
+            role: pendingRole,
             degree_programme: degree,
             year_of_study: year,
             location_preference: location,
@@ -1326,9 +1574,224 @@ async function handleSignUp() {
 }
 
 document.getElementById('btn-signout').addEventListener('click', () => sb.auth.signOut());
+document.getElementById('staff-btn-signout').addEventListener('click', () => sb.auth.signOut());
+
+// ── STAFF PORTAL ───────────────────────────────────────────────────────
+let staffCompanies = [];
+let editingPlacementId = null;
+
+async function loadStaffData() {
+    await Promise.all([loadStaffPlacements(), loadStaffCompanies()]);
+}
+
+async function loadStaffCompanies() {
+    const { data } = await sb.from('companies').select('*').order('name');
+    staffCompanies = data || [];
+
+    // Populate company select in placement modal
+    const select = document.getElementById('p-company');
+    select.innerHTML = '<option value="">Select company...</option>' +
+        staffCompanies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+    // Render companies table
+    const tbody = document.getElementById('staff-companies-body');
+    if (!staffCompanies.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="text-align:center;padding:2rem;">No companies yet.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = staffCompanies.map(c => `
+        <tr>
+            <td style="font-weight:600;">${c.name}</td>
+            <td>${c.industry || '—'}</td>
+            <td>${c.website_url ? `<a href="${c.website_url}" target="_blank" style="color:#2563eb;">${c.website_url}</a>` : '—'}</td>
+            <td style="text-align:right;">
+                <button class="btn btn-secondary btn-sm" onclick="openCompanyModal('${c.id}')">Edit</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function loadStaffPlacements() {
+    const { data } = await sb
+        .from('placements')
+        .select('*, companies(name)')
+        .order('created_at', { ascending: false });
+
+    const tbody = document.getElementById('staff-placements-body');
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9ca3af;">No placements yet. Add one to get started.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(p => `
+        <tr>
+            <td style="font-weight:600;">${p.title || '—'}</td>
+            <td>${p.companies?.name || '—'}</td>
+            <td>${p.location || '—'}</td>
+            <td>${p.deadline ? new Date(p.deadline).toLocaleDateString() : '—'}</td>
+            <td><span class="badge ${p.is_active ? 'badge-green' : 'badge-gray'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td style="text-align:right;white-space:nowrap;">
+                <button class="btn btn-secondary btn-sm" onclick="openPlacementModal('${p.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm" style="margin-left:0.4rem;" onclick="togglePlacementActive('${p.id}', ${p.is_active})">${p.is_active ? 'Deactivate' : 'Activate'}</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openPlacementModal(placementId = null) {
+    editingPlacementId = placementId;
+    document.getElementById('placement-modal-title').textContent = placementId ? 'Edit Placement' : 'Add Placement';
+    document.getElementById('placement-modal-msg').innerHTML = '';
+
+    // Clear form
+    ['p-title','p-description','p-location','p-salary','p-deadline','p-link','p-required-skills','p-preferred-skills']
+        .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-company').value = '';
+
+    if (placementId) loadPlacementForEdit(placementId);
+    document.getElementById('placement-modal').classList.add('open');
+}
+
+async function loadPlacementForEdit(id) {
+    const { data } = await sb
+        .from('placements')
+        .select('*, placement_skills(importance, skills(name))')
+        .eq('id', id)
+        .single();
+    if (!data) return;
+
+    document.getElementById('p-company').value     = data.company_id || '';
+    document.getElementById('p-title').value       = data.title || '';
+    document.getElementById('p-description').value = data.description || '';
+    document.getElementById('p-location').value    = data.location || '';
+    document.getElementById('p-salary').value      = data.salary_range || '';
+    document.getElementById('p-deadline').value    = data.deadline?.slice(0, 10) || '';
+    document.getElementById('p-link').value        = data.application_link || '';
+
+    const req  = (data.placement_skills || []).filter(ps => ps.importance === 'required').map(ps => ps.skills?.name).filter(Boolean).join(', ');
+    const pref = (data.placement_skills || []).filter(ps => ps.importance !== 'required').map(ps => ps.skills?.name).filter(Boolean).join(', ');
+    document.getElementById('p-required-skills').value  = req;
+    document.getElementById('p-preferred-skills').value = pref;
+}
+
+function closePlacementModal() {
+    document.getElementById('placement-modal').classList.remove('open');
+    editingPlacementId = null;
+}
+
+async function savePlacement() {
+    const msgEl = document.getElementById('placement-modal-msg');
+    const companyId   = document.getElementById('p-company').value;
+    const title       = document.getElementById('p-title').value.trim();
+    const description = document.getElementById('p-description').value.trim();
+    const location    = document.getElementById('p-location').value.trim();
+
+    if (!companyId || !title || !description || !location) {
+        showMsg(msgEl, 'Company, title, description and location are required.', 'error'); return;
+    }
+
+    const payload = {
+        company_id:       companyId,
+        title,
+        description,
+        location,
+        salary_range:     document.getElementById('p-salary').value ? parseFloat(document.getElementById('p-salary').value) : null,
+        deadline:         document.getElementById('p-deadline').value || null,
+        application_link: document.getElementById('p-link').value.trim() || null,
+        is_active:        true,
+    };
+
+    let placementId = editingPlacementId;
+    if (placementId) {
+        const { error } = await sb.from('placements').update(payload).eq('id', placementId);
+        if (error) { showMsg(msgEl, error.message, 'error'); return; }
+    } else {
+        const { data, error } = await sb.from('placements').insert(payload).select().single();
+        if (error) { showMsg(msgEl, error.message, 'error'); return; }
+        placementId = data.id;
+    }
+
+    await savePlacementSkills(placementId);
+    closePlacementModal();
+    loadStaffPlacements();
+}
+
+async function savePlacementSkills(placementId) {
+    const requiredNames  = document.getElementById('p-required-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+    const preferredNames = document.getElementById('p-preferred-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+
+    await sb.from('placement_skills').delete().eq('placement_id', placementId);
+
+    const all = [
+        ...requiredNames.map(name => ({ name, importance: 'required' })),
+        ...preferredNames.map(name => ({ name, importance: 'preferred' })),
+    ];
+
+    for (const { name, importance } of all) {
+        const { data: existing } = await sb.from('skills').select('id').ilike('name', name).limit(1).maybeSingle();
+        let skillId = existing?.id;
+        if (!skillId) {
+            const { data: created } = await sb.from('skills').insert({ name, category: 'technical' }).select('id').single();
+            skillId = created?.id;
+        }
+        if (skillId) await sb.from('placement_skills').insert({ placement_id: placementId, skill_id: skillId, importance });
+    }
+}
+
+async function togglePlacementActive(id, currentlyActive) {
+    if (!confirm(`${currentlyActive ? 'Deactivate' : 'Activate'} this placement?`)) return;
+    await sb.from('placements').update({ is_active: !currentlyActive }).eq('id', id);
+    loadStaffPlacements();
+}
+
+// ── COMPANY MODAL ──────────────────────────────────────────────────────
+let editingCompanyId = null;
+
+function openCompanyModal(companyId = null) {
+    editingCompanyId = companyId;
+    document.getElementById('company-modal-title').textContent = companyId ? 'Edit Company' : 'Add Company';
+    document.getElementById('company-modal-msg').innerHTML = '';
+    ['c-name','c-industry','c-website','c-description'].forEach(id => document.getElementById(id).value = '');
+
+    if (companyId) {
+        const company = staffCompanies.find(c => c.id === companyId);
+        if (company) {
+            document.getElementById('c-name').value        = company.name || '';
+            document.getElementById('c-industry').value    = company.industry || '';
+            document.getElementById('c-website').value     = company.website_url || '';
+            document.getElementById('c-description').value = company.description || '';
+        }
+    }
+    document.getElementById('company-modal').classList.add('open');
+}
+
+async function saveCompany() {
+    const msgEl = document.getElementById('company-modal-msg');
+    const name  = document.getElementById('c-name').value.trim();
+    if (!name) { showMsg(msgEl, 'Company name is required.', 'error'); return; }
+
+    const payload = {
+        name,
+        industry:    document.getElementById('c-industry').value.trim() || null,
+        website_url: document.getElementById('c-website').value.trim()  || null,
+        description: document.getElementById('c-description').value.trim() || null,
+    };
+
+    if (editingCompanyId) {
+        const { error } = await sb.from('companies').update(payload).eq('id', editingCompanyId);
+        if (error) { showMsg(msgEl, error.message, 'error'); return; }
+    } else {
+        const { error } = await sb.from('companies').insert(payload);
+        if (error) { showMsg(msgEl, error.message, 'error'); return; }
+    }
+
+    document.getElementById('company-modal').classList.remove('open');
+    loadStaffCompanies();
+}
 
 // ── MODAL HELPERS ─────────────────────────────────────────────────────
 function openModal(mode) {
+    // If opening sign-in directly (not via selectRole), reset role to student
+    if (mode === 'signin') pendingRole = 'student';
     document.getElementById('auth-modal').classList.add('open');
     document.getElementById('form-signin').style.display = mode === 'signin' ? 'block' : 'none';
     document.getElementById('form-signup').style.display = mode === 'signup' ? 'block' : 'none';
