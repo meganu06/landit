@@ -4,30 +4,49 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>LandIt — Placement Matching</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- We're using Playfair Display as a stand-in for 'Atteron' as it's a similar elegant serif, and DM Sans as requested -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        :root {
+            --primary: #344e41; /* Dark green */
+            --secondary: #a3b18a; /* Light olive green */
+            --background: #dad7cd; /* Light beige/khaki */
+            --white: #ffffff;
+            --text-dark: #2d3830;
+            --text-gray: #5c665e;
+            
+            --font-heading: 'Playfair Display', serif; /* Stand-in for Atteron */
+            --font-body: 'DM Sans', sans-serif;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background: #f8fafc;
-            color: #1f2937;
+            font-family: var(--font-body);
+            background: var(--background);
+            color: var(--text-dark);
+        }
+
+        h1, h2, h3, h4, h5, h6, .navbar-brand {
+            font-family: var(--font-heading);
         }
 
         /* ── LANDING ─────────────────────────────── */
         #landing {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, #2a3e34 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 2rem;
         }
         .landing-card {
-            background: white;
+            background: var(--white);
             border-radius: 20px;
             padding: 3rem;
             max-width: 480px;
@@ -35,8 +54,20 @@
             text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.15);
         }
-        .landing-card h1 { font-size: 2.2rem; font-weight: 700; color: #2563eb; margin-bottom: 0.5rem; }
-        .landing-card p  { color: #6b7280; margin-bottom: 2rem; line-height: 1.6; }
+        
+        .logo-img {
+            width: 120px;
+            margin-bottom: 1rem;
+        }
+        
+        .landing-card h1 { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            color: var(--primary); 
+            margin-bottom: 0.5rem; 
+            letter-spacing: 1px;
+        }
+        .landing-card p  { color: var(--text-gray); margin-bottom: 2rem; line-height: 1.6; }
         .landing-features {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -44,12 +75,12 @@
             margin-bottom: 2rem;
         }
         .feature-chip {
-            background: #f3f4f6;
+            background: var(--background);
             border-radius: 12px;
             padding: 1rem 0.5rem;
             font-size: 0.8rem;
             font-weight: 500;
-            color: #374151;
+            color: var(--primary);
         }
         .feature-chip .icon { font-size: 1.6rem; display: block; margin-bottom: 0.3rem; }
         .landing-btns { display: flex; gap: 1rem; justify-content: center; }
@@ -60,16 +91,29 @@
         /* Top navbar */
         .navbar {
             position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            background: #2563eb;
-            color: white;
+            background: var(--primary);
+            color: var(--white);
             padding: 0 1.5rem;
-            height: 56px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+            box-shadow: 0 2px 8px rgba(52, 78, 65, 0.3);
         }
-        .navbar-brand { font-weight: 700; font-size: 1.2rem; }
+        .navbar-brand { 
+            font-weight: 700; 
+            font-size: 1.5rem; 
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .navbar-logo-mini {
+            height: 30px;
+            border-radius: 50%;
+        }
+        
         .navbar-user  { font-size: 0.9rem; opacity: 0.9; }
         .navbar-actions { display: flex; gap: 0.5rem; align-items: center; }
         .navbar-actions button {
@@ -80,42 +124,44 @@
             cursor: pointer;
             font-size: 0.85rem;
             font-family: inherit;
+            transition: all 0.2s;
         }
         .navbar-actions button:hover { background: rgba(255,255,255,0.25); }
-        #btn-signout { background: rgba(239,68,68,0.7) !important; }
-        #btn-signout:hover { background: rgba(239,68,68,0.9) !important; }
+        #btn-signout { background: rgba(239,68,68,0.8) !important; }
+        #btn-signout:hover { background: rgba(239,68,68,1) !important; }
 
         /* Tab navigation */
         .tab-nav {
-            position: fixed; top: 56px; left: 0; right: 0; z-index: 99;
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
+            position: fixed; top: 60px; left: 0; right: 0; z-index: 99;
+            background: var(--white);
+            border-bottom: 1px solid var(--background);
             padding: 0 1.5rem;
             display: flex;
             gap: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
         .tab-btn {
             background: none; border: none;
-            padding: 0.9rem 1.2rem;
-            font-size: 0.9rem; font-weight: 500;
-            color: #6b7280;
+            padding: 1rem 1.2rem;
+            font-size: 0.95rem; font-weight: 500;
+            color: var(--text-gray);
             cursor: pointer;
             border-bottom: 2px solid transparent;
             margin-bottom: -1px;
             font-family: inherit;
             transition: all 0.15s;
         }
-        .tab-btn:hover { color: #2563eb; }
-        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
         /* Main content */
         .content {
-            margin-top: 104px;
+            margin-top: 108px;
             padding: 1.5rem;
             max-width: 1100px;
             margin-left: auto;
             margin-right: auto;
-            padding-top: calc(104px + 1.5rem);
+            padding-top: calc(108px + 1.5rem);
         }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
@@ -125,62 +171,67 @@
             display: inline-flex; align-items: center; gap: 0.4rem;
             padding: 0.6rem 1.2rem;
             border: none; border-radius: 8px;
-            font-size: 0.9rem; font-weight: 500;
+            font-size: 0.9rem; font-weight: 600;
             cursor: pointer; font-family: inherit;
-            transition: all 0.15s;
+            transition: all 0.2s;
         }
-        .btn-primary { background: #2563eb; color: white; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-secondary { background: #f3f4f6; color: #374151; }
-        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #23362c; transform: translateY(-1px); }
+        .btn-secondary { background: var(--secondary); color: var(--white); }
+        .btn-secondary:hover { background: #8a9972; transform: translateY(-1px); }
         .btn-danger { background: #fee2e2; color: #dc2626; }
         .btn-danger:hover { background: #fecaca; }
-        .btn-sm { padding: 0.35rem 0.8rem; font-size: 0.8rem; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
 
         .card {
-            background: white;
-            border: 1px solid #e5e7eb;
+            background: var(--white);
+            border: 1px solid var(--background);
             border-radius: 12px;
-            padding: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
-        .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1rem; }
+        .card-title { font-size: 1.2rem; font-weight: 600; color: var(--primary); margin-bottom: 1rem; }
 
         .badge {
             display: inline-block;
-            padding: 0.2rem 0.6rem;
+            padding: 0.25rem 0.7rem;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
         }
-        .badge-green  { background: #dcfce7; color: #166534; }
+        .badge-green  { background: var(--secondary); color: var(--white); }
         .badge-yellow { background: #fef9c3; color: #854d0e; }
         .badge-red    { background: #fee2e2; color: #991b1b; }
-        .badge-blue   { background: #dbeafe; color: #1e40af; }
+        .badge-blue   { background: var(--background); color: var(--primary); }
         .badge-gray   { background: #f3f4f6; color: #6b7280; }
 
         .skill-tag {
             display: inline-flex; align-items: center; gap: 0.4rem;
-            background: #eff6ff; color: #1d4ed8;
-            padding: 0.3rem 0.7rem;
-            border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+            background: var(--background); color: var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px; font-size: 0.85rem; font-weight: 600;
         }
         .skill-tag button {
             background: none; border: none;
-            color: #6b7280; cursor: pointer;
-            font-size: 1rem; line-height: 1;
+            color: var(--text-gray); cursor: pointer;
+            font-size: 1.1rem; line-height: 1;
             padding: 0;
+            transition: color 0.15s;
         }
         .skill-tag button:hover { color: #dc2626; }
 
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
-            color: #9ca3af;
+            color: var(--text-gray);
+            background: var(--white);
+            border-radius: 12px;
+            border: 1px dashed var(--secondary);
         }
-        .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.7; }
         .empty-state p { font-size: 0.95rem; }
 
-        .loading { color: #9ca3af; font-size: 0.9rem; padding: 1rem 0; }
+        .loading { color: var(--text-gray); font-size: 0.9rem; padding: 1rem 0; font-style: italic; }
 
         .alert {
             padding: 0.8rem 1rem;
@@ -188,243 +239,266 @@
             font-size: 0.875rem;
             margin-bottom: 1rem;
         }
-        .alert-success { background: #dcfce7; color: #166534; }
+        .alert-success { background: var(--secondary); color: var(--white); }
         .alert-error   { background: #fee2e2; color: #991b1b; }
 
         /* ── OVERVIEW TAB ────────────────────────── */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 1.2rem;
+            margin-bottom: 2rem;
         }
         .stat-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 1.25rem;
+            background: var(--white);
+            border: none;
+            border-radius: 16px;
+            padding: 1.5rem;
             text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
         }
         .stat-card .stat-value {
-            font-size: 2rem; font-weight: 700;
+            font-family: var(--font-heading);
+            font-size: 2.5rem; font-weight: 700;
             margin-bottom: 0.25rem;
         }
-        .stat-card .stat-label { font-size: 0.8rem; color: #6b7280; font-weight: 500; }
-        .stat-card.green .stat-value { color: #10b981; }
-        .stat-card.blue  .stat-value { color: #2563eb; }
-        .stat-card.purple .stat-value { color: #7c3aed; }
-        .stat-card.orange .stat-value { color: #f59e0b; }
+        .stat-card .stat-label { font-size: 0.85rem; color: var(--text-gray); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card.green .stat-value { color: var(--primary); }
+        .stat-card.blue  .stat-value { color: var(--secondary); }
+        .stat-card.purple .stat-value { color: var(--primary); opacity: 0.8; }
+        .stat-card.orange .stat-value { color: var(--secondary); opacity: 0.8; }
 
         .section-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
         }
-        .section-header h2 { font-size: 1.1rem; font-weight: 600; }
+        .section-header h2 { font-size: 1.4rem; font-weight: 600; color: var(--primary); }
 
         /* ── PLACEMENT CARD ──────────────────────── */
         .placement-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            transition: box-shadow 0.15s;
+            background: var(--white);
+            border: 1px solid rgba(163, 177, 138, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.2rem;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
-        .placement-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .placement-card:hover { 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06); 
+            border-color: var(--secondary);
+        }
         .placement-header {
             display: flex; justify-content: space-between;
-            align-items: flex-start; margin-bottom: 0.75rem;
+            align-items: flex-start; margin-bottom: 1rem;
         }
-        .placement-title { font-size: 1rem; font-weight: 600; color: #111827; }
-        .placement-company { font-size: 0.85rem; color: #6b7280; margin-top: 0.15rem; }
+        .placement-title { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 600; color: var(--primary); }
+        .placement-company { font-size: 0.9rem; color: var(--text-gray); margin-top: 0.2rem; font-weight: 500; }
         .placement-meta {
-            display: flex; gap: 1rem; flex-wrap: wrap;
-            margin: 0.75rem 0; font-size: 0.82rem; color: #6b7280;
+            display: flex; gap: 1.2rem; flex-wrap: wrap;
+            margin: 1rem 0; font-size: 0.85rem; color: var(--text-gray);
+            background: var(--background);
+            padding: 0.8rem;
+            border-radius: 8px;
         }
-        .placement-meta span { display: flex; align-items: center; gap: 0.3rem; }
-        .placement-skills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+        .placement-meta span { display: flex; align-items: center; gap: 0.4rem; font-weight: 500; }
+        .placement-skills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
         .placement-actions {
-            display: flex; gap: 0.5rem; margin-top: 1rem;
-            padding-top: 0.75rem; border-top: 1px solid #f3f4f6;
+            display: flex; gap: 0.75rem; margin-top: 1.2rem;
+            padding-top: 1rem; border-top: 1px solid rgba(163, 177, 138, 0.2);
             align-items: center;
         }
         .score-badge {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 56px; height: 56px;
+            width: 60px; height: 60px;
             border-radius: 50%;
-            font-weight: 700; font-size: 0.85rem;
+            font-family: var(--font-heading);
+            font-weight: 700; font-size: 1rem;
             flex-shrink: 0;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        .score-high   { background: #dcfce7; color: #166534; }
-        .score-medium { background: #fef9c3; color: #854d0e; }
-        .score-low    { background: #fee2e2; color: #991b1b; }
+        .score-high   { background: var(--primary); color: white; }
+        .score-medium { background: var(--secondary); color: white; }
+        .score-low    { background: var(--background); color: var(--primary); }
         .score-none   { background: #f3f4f6; color: #9ca3af; }
 
         /* ── SKILLS TAB ──────────────────────────── */
-        .skills-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .skills-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.5rem; }
         .add-skill-form {
             display: flex; gap: 0.75rem; align-items: center;
             flex-wrap: wrap; margin-top: 1rem;
         }
         .add-skill-form input, .add-skill-form select {
-            padding: 0.6rem 0.9rem;
-            border: 1px solid #d1d5db;
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--secondary);
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-family: inherit;
             outline: none;
+            background: var(--white);
         }
         .add-skill-form input:focus, .add-skill-form select:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(163, 177, 138, 0.3);
         }
 
         /* ── CV TAB ──────────────────────────────── */
         .cv-dropzone {
-            border: 2px dashed #d1d5db;
-            border-radius: 12px;
-            padding: 2.5rem;
+            border: 2px dashed var(--secondary);
+            border-radius: 16px;
+            padding: 3rem 2rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.5);
         }
         .cv-dropzone:hover, .cv-dropzone.drag-over {
-            border-color: #2563eb;
-            background: #eff6ff;
+            border-color: var(--primary);
+            background: var(--background);
         }
-        .cv-dropzone .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-        .cv-dropzone p { color: #6b7280; font-size: 0.9rem; }
-        .cv-dropzone strong { color: #2563eb; }
+        .cv-dropzone .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .cv-dropzone p { color: var(--text-gray); font-size: 1rem; }
+        .cv-dropzone strong { color: var(--primary); }
         #cv-file-input { display: none; }
         .cv-current {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem; background: #f8fafc;
-            border: 1px solid #e5e7eb; border-radius: 8px;
+            display: flex; align-items: center; gap: 1.2rem;
+            padding: 1.2rem; background: var(--white);
+            border: 1px solid var(--secondary); border-radius: 12px;
             margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
-        .cv-current .cv-icon { font-size: 2rem; }
+        .cv-current .cv-icon { font-size: 2.5rem; }
         .cv-current .cv-info { flex: 1; }
-        .cv-current .cv-name { font-weight: 600; font-size: 0.95rem; }
-        .cv-current .cv-meta { font-size: 0.8rem; color: #9ca3af; margin-top: 0.2rem; }
+        .cv-current .cv-name { font-weight: 600; font-size: 1rem; color: var(--primary); }
+        .cv-current .cv-meta { font-size: 0.85rem; color: var(--text-gray); margin-top: 0.3rem; }
 
         /* ── AUTH MODAL ──────────────────────────── */
         .modal-overlay {
             display: none;
             position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.5);
+            background: rgba(52, 78, 65, 0.6);
+            backdrop-filter: blur(4px);
             align-items: center; justify-content: center;
         }
         .modal-overlay.open { display: flex; }
         .modal {
-            background: white; border-radius: 16px;
-            padding: 2rem; width: 90%; max-width: 460px;
+            background: var(--white); border-radius: 20px;
+            padding: 2.5rem; width: 90%; max-width: 460px;
             position: relative;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
             max-height: 90vh; overflow-y: auto;
         }
-        .modal h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
+        .modal h2 { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--primary); text-align: center; }
         .modal-close {
             position: absolute; top: 1rem; right: 1rem;
-            background: none; border: none;
-            font-size: 1.4rem; cursor: pointer; color: #9ca3af;
+            background: var(--background); border: none;
+            width: 32px; height: 32px; border-radius: 50%;
+            font-size: 1.2rem; cursor: pointer; color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
         }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: #374151; }
-        .form-group input {
-            width: 100%; padding: 0.7rem 0.9rem;
-            border: 1px solid #d1d5db; border-radius: 8px;
+        .modal-close:hover { background: var(--secondary); color: white; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary); }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 0.8rem 1rem;
+            border: 1px solid #d1d5db; border-radius: 10px;
             font-size: 0.95rem; font-family: inherit; outline: none;
+            background: #fafafa;
+            transition: all 0.2s;
         }
-        .form-group input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .form-group select {
-            width: 100%; padding: 0.7rem 0.9rem;
-            border: 1px solid #d1d5db; border-radius: 8px;
-            font-size: 0.95rem; font-family: inherit; outline: none; background: white;
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 3px rgba(163, 177, 138, 0.3); 
+            background: white;
         }
-        .form-group select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .form-link { color: #6b7280; font-size: 0.85rem; text-align: center; margin-top: 1rem; }
+        .form-link { color: var(--text-gray); font-size: 0.9rem; text-align: center; margin-top: 1.5rem; }
+        .form-link a { color: var(--primary); font-weight: 600; cursor: pointer; text-decoration: underline; text-decoration-color: var(--secondary); }
+        .form-link a:hover { color: var(--secondary); }
 
         /* ── PROFILE TAB ─────────────────────────── */
         .profile-avatar {
-            width: 72px; height: 72px; border-radius: 50%;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: white; font-size: 1.6rem; font-weight: 700;
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; font-size: 2rem; font-weight: 700; font-family: var(--font-heading);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         .profile-header {
-            display: flex; align-items: center; gap: 1.25rem;
-            margin-bottom: 1.5rem; padding-bottom: 1.25rem;
-            border-bottom: 1px solid #f3f4f6;
+            display: flex; align-items: center; gap: 1.5rem;
+            margin-bottom: 2rem; padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--background);
         }
-        .profile-header-info h3 { font-size: 1.2rem; font-weight: 700; }
-        .profile-header-info p  { color: #6b7280; font-size: 0.875rem; margin-top: 0.2rem; }
-        .profile-form { display: grid; gap: 1rem; }
-        .profile-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .profile-header-info h3 { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+        .profile-header-info p  { color: var(--text-gray); font-size: 0.95rem; margin-top: 0.3rem; }
+        .profile-form { display: grid; gap: 1.2rem; }
+        .profile-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
         @media (max-width: 600px) { .profile-form-row { grid-template-columns: 1fr; } }
-        .profile-field label { display: block; font-size: 0.85rem; font-weight: 500; color: #374151; margin-bottom: 0.4rem; }
+        .profile-field label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--primary); margin-bottom: 0.5rem; }
         .profile-field input, .profile-field select, .profile-field textarea {
-            width: 100%; padding: 0.7rem 0.9rem;
-            border: 1px solid #d1d5db; border-radius: 8px;
-            font-size: 0.9rem; font-family: inherit; outline: none; background: white;
+            width: 100%; padding: 0.8rem 1rem;
+            border: 1px solid var(--secondary); border-radius: 10px;
+            font-size: 0.95rem; font-family: inherit; outline: none; background: white;
+            transition: all 0.2s;
         }
         .profile-field input:focus, .profile-field select:focus, .profile-field textarea:focus {
-            border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            border-color: var(--primary); box-shadow: 0 0 0 3px rgba(163, 177, 138, 0.3);
         }
-        .profile-field textarea { resize: vertical; min-height: 80px; }
-        .profile-links { display: flex; gap: 0.75rem; margin-top: 0.25rem; flex-wrap: wrap; }
+        .profile-field textarea { resize: vertical; min-height: 100px; }
+        .profile-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
         .profile-link-badge {
             display: inline-flex; align-items: center; gap: 0.4rem;
-            background: #f3f4f6; color: #374151;
-            padding: 0.3rem 0.8rem; border-radius: 20px;
-            font-size: 0.8rem; font-weight: 500; text-decoration: none;
+            background: var(--background); color: var(--primary);
+            padding: 0.4rem 1rem; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; text-decoration: none;
+            transition: background 0.2s;
         }
-        .profile-link-badge:hover { background: #e5e7eb; }
+        .profile-link-badge:hover { background: var(--secondary); color: white; }
 
         /* ── LANDING ROLE CARDS ──────────────────── */
         .landing-roles {
             display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
         .role-card {
-            border: 2px solid #e5e7eb; border-radius: 14px;
-            padding: 1.25rem 1rem; cursor: pointer;
-            transition: all 0.15s; text-align: center;
+            border: 2px solid var(--background); border-radius: 16px;
+            padding: 1.5rem 1rem; cursor: pointer;
+            transition: all 0.2s; text-align: center;
+            background: white;
         }
-        .role-card:hover { border-color: #2563eb; background: #eff6ff; }
-        .role-card .role-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-        .role-card .role-title { font-weight: 700; font-size: 1rem; color: #111827; }
-        .role-card .role-desc  { font-size: 0.78rem; color: #6b7280; margin-top: 0.25rem; }
+        .role-card:hover { border-color: var(--secondary); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .role-card .role-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+        .role-card .role-title { font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; color: var(--primary); }
+        .role-card .role-desc  { font-size: 0.85rem; color: var(--text-gray); margin-top: 0.4rem; }
 
         /* ── STAFF PORTAL ────────────────────────── */
         #staff-portal { display: none; min-height: 100vh; }
         .staff-table { width: 100%; border-collapse: collapse; }
         .staff-table th {
-            text-align: left; font-size: 0.8rem; font-weight: 600;
-            color: #6b7280; padding: 0.6rem 1rem;
-            background: #f8fafc; border-bottom: 1px solid #e5e7eb;
+            text-align: left; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--primary); padding: 1rem;
+            background: var(--background); border-bottom: 2px solid var(--secondary);
         }
         .staff-table td {
-            padding: 0.9rem 1rem; border-bottom: 1px solid #f3f4f6;
-            font-size: 0.875rem; vertical-align: middle;
+            padding: 1rem; border-bottom: 1px solid rgba(163, 177, 138, 0.3);
+            font-size: 0.9rem; vertical-align: middle;
         }
         .staff-table tr:last-child td { border-bottom: none; }
-        .staff-table tr:hover td { background: #fafafa; }
+        .staff-table tr:hover td { background: rgba(218, 215, 205, 0.2); }
         .staff-card {
-            background: white; border: 1px solid #e5e7eb;
-            border-radius: 12px; overflow: hidden;
+            background: white; border: 1px solid rgba(163, 177, 138, 0.3);
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
-        .placement-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .placement-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
         @media (max-width: 600px) { .placement-form-grid { grid-template-columns: 1fr; } }
-        .form-group textarea {
-            width: 100%; padding: 0.7rem 0.9rem;
-            border: 1px solid #d1d5db; border-radius: 8px;
-            font-size: 0.95rem; font-family: inherit; outline: none;
-            resize: vertical; min-height: 90px;
-        }
-        .form-group textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .form-link a { color: #2563eb; cursor: pointer; text-decoration: none; }
-        #auth-message { margin-top: 0.75rem; }
+        #auth-message { margin-top: 1rem; }
     </style>
 </head>
 <body>
@@ -432,14 +506,31 @@
 <!-- ── LANDING (unauthenticated) ─────────────────────────────────────── -->
 <div id="landing">
     <div class="landing-card">
-        <h1>LandIt</h1>
+        <!-- Replaced with requested LandIt logo -->
+        <svg class="logo-img" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Target Rings -->
+            <circle cx="100" cy="100" r="60" fill="none" stroke="#344e41" stroke-width="4"/>
+            <circle cx="100" cy="100" r="45" fill="none" stroke="#344e41" stroke-width="4"/>
+            <circle cx="100" cy="100" r="30" fill="none" stroke="#344e41" stroke-width="4"/>
+            <!-- Bullseye -->
+            <circle cx="100" cy="100" r="12" fill="#344e41"/>
+            <!-- Arrow -->
+            <line x1="100" y1="100" x2="160" y2="40" stroke="#344e41" stroke-width="6" stroke-linecap="round"/>
+            <line x1="100" y1="100" x2="150" y2="50" stroke="#344e41" stroke-width="12" stroke-linecap="round"/>
+            <!-- Arrow Feathers (Fletching) -->
+            <path d="M150 50 L165 35 L175 45 L160 60 Z" fill="#344e41"/>
+            <path d="M165 35 L175 25 L180 35 L170 45 Z" fill="#a3b18a"/>
+            <path d="M160 60 L150 70 L160 75 L170 65 Z" fill="#a3b18a"/>
+        </svg>
+        
+        <h1>LANDIT</h1>
         <p>Your AI-powered placement companion. Upload your CV, get matched to placements, and track your skill gaps.</p>
         <div class="landing-features">
             <div class="feature-chip"><span class="icon">🎯</span>Smart Matching</div>
             <div class="feature-chip"><span class="icon">📄</span>CV Analysis</div>
             <div class="feature-chip"><span class="icon">🚀</span>Skill Gaps</div>
         </div>
-        <p style="font-size:0.85rem;color:#9ca3af;margin-bottom:0.75rem;">I am a...</p>
+        <p style="font-size:0.9rem;color:var(--text-gray);margin-bottom:1rem;font-weight:600;">I am a...</p>
         <div class="landing-roles">
             <div class="role-card" onclick="selectRole('student')">
                 <div class="role-icon">🎓</div>
@@ -453,7 +544,7 @@
             </div>
         </div>
         <div class="landing-btns">
-            <button class="btn btn-secondary" onclick="openModal('signin')">Sign In</button>
+            <button class="btn btn-primary" onclick="openModal('signin')" style="padding: 0.8rem 2rem; font-size: 1rem;">Sign In</button>
         </div>
     </div>
 </div>
@@ -461,7 +552,16 @@
 <!-- ── DASHBOARD (authenticated) ─────────────────────────────────────── -->
 <div id="dashboard">
     <header class="navbar">
-        <div class="navbar-brand">🎯 LandIt</div>
+        <div class="navbar-brand">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="navbar-logo-mini" style="background:var(--background); padding:4px;">
+                <circle cx="100" cy="100" r="60" fill="none" stroke="#344e41" stroke-width="6"/>
+                <circle cx="100" cy="100" r="30" fill="none" stroke="#344e41" stroke-width="6"/>
+                <circle cx="100" cy="100" r="12" fill="#344e41"/>
+                <line x1="100" y1="100" x2="160" y2="40" stroke="#344e41" stroke-width="8" stroke-linecap="round"/>
+                <path d="M150 50 L170 30 L180 40 L160 60 Z" fill="#344e41"/>
+            </svg>
+            LANDIT
+        </div>
         <span class="navbar-user" id="navbar-welcome"></span>
         <div class="navbar-actions">
             <button id="btn-signout">Sign Out</button>
@@ -502,7 +602,7 @@
 
             <div class="section-header">
                 <h2>Top Placement Matches</h2>
-                <button class="btn btn-primary btn-sm" onclick="runMatching()">Refresh Matches</button>
+                <button class="btn btn-secondary btn-sm" onclick="runMatching()">Refresh Matches</button>
             </div>
             <div id="top-matches-list"><div class="loading">Loading matches...</div></div>
         </div>
@@ -511,7 +611,7 @@
         <div id="tab-placements" class="tab-panel">
             <div class="section-header">
                 <h2>All Placements</h2>
-                <span id="placements-count" style="color:#9ca3af;font-size:0.85rem;"></span>
+                <span id="placements-count" style="color:var(--text-gray);font-size:0.9rem;font-weight:600;background:var(--background);padding:0.3rem 0.8rem;border-radius:20px;"></span>
             </div>
             <div id="placements-list"><div class="loading">Loading placements...</div></div>
         </div>
@@ -520,15 +620,15 @@
         <div id="tab-skills" class="tab-panel">
             <div class="card">
                 <div class="card-title">Your Skills</div>
-                <p style="color:#6b7280;font-size:0.875rem;margin-bottom:1rem;">Skills are automatically extracted when you upload your CV. You can also add them manually below.</p>
+                <p style="color:var(--text-gray);font-size:0.95rem;margin-bottom:1.5rem;">Skills are automatically extracted when you upload your CV. You can also add them manually below.</p>
                 <div class="skills-grid" id="skills-grid">
                     <div class="loading">Loading skills...</div>
                 </div>
-                <details style="margin-top:1.25rem;">
-                    <summary style="cursor:pointer;font-weight:600;font-size:0.9rem;color:#2563eb;list-style:none;display:flex;align-items:center;gap:0.4rem;">
-                        &#43; Add a skill manually
+                <details style="margin-top:1.5rem; background: #fafafa; padding: 1rem; border-radius: 12px; border: 1px solid var(--background);">
+                    <summary style="cursor:pointer;font-weight:600;font-size:0.95rem;color:var(--primary);list-style:none;display:flex;align-items:center;gap:0.4rem;">
+                        <span style="background:var(--background);width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;">&#43;</span> Add a skill manually
                     </summary>
-                    <div style="margin-top:0.75rem;">
+                    <div style="margin-top:1rem;">
                         <div class="add-skill-form">
                             <input type="text" id="skill-input" placeholder="e.g. Python, React, SQL..." style="flex:1;min-width:200px;">
                             <select id="skill-level">
@@ -538,7 +638,7 @@
                                 <option value="4">Advanced</option>
                                 <option value="5">Expert</option>
                             </select>
-                            <button class="btn btn-primary" onclick="addSkill()">Add</button>
+                            <button class="btn btn-primary" onclick="addSkill()">Add Skill</button>
                         </div>
                         <div id="skill-message" style="margin-top:0.75rem;"></div>
                     </div>
@@ -554,7 +654,7 @@
                 <div class="cv-dropzone" id="cv-dropzone" onclick="document.getElementById('cv-file-input').click()">
                     <div class="icon">📄</div>
                     <p><strong>Click to upload</strong> or drag and drop</p>
-                    <p style="margin-top:0.4rem;font-size:0.8rem;">PDF or DOCX — max 10 MB</p>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-gray);">PDF or DOCX — max 10 MB</p>
                 </div>
                 <input type="file" id="cv-file-input" accept=".pdf,.docx">
                 <div id="cv-message" style="margin-top:1rem;"></div>
@@ -569,13 +669,13 @@
 
         <!-- PROFILE -->
         <div id="tab-profile" class="tab-panel">
-            <div class="card" style="max-width:680px;">
+            <div class="card" style="max-width:680px; margin: 0 auto;">
                 <div class="profile-header">
                     <div class="profile-avatar" id="profile-avatar">?</div>
                     <div class="profile-header-info">
                         <h3 id="profile-full-name">—</h3>
                         <p id="profile-email-display">—</p>
-                        <div class="profile-links" id="profile-ext-links" style="margin-top:0.5rem;"></div>
+                        <div class="profile-links" id="profile-ext-links" style="margin-top:0.8rem;"></div>
                     </div>
                 </div>
 
@@ -620,11 +720,11 @@
                     </div>
                     <div class="profile-form-row">
                         <div class="profile-field">
-                            <label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                            <label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="url" id="profile-linkedin" placeholder="https://linkedin.com/in/...">
                         </div>
                         <div class="profile-field">
-                            <label>GitHub URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                            <label>GitHub URL <span style="color:#9ca3af;font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="url" id="profile-github" placeholder="https://github.com/...">
                         </div>
                     </div>
@@ -632,8 +732,8 @@
                         <label>Preferred Location</label>
                         <input type="text" id="profile-location" placeholder="e.g. London, Remote, Anywhere...">
                     </div>
-                    <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.5rem;">
-                        <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+                    <div style="display:flex;gap:1rem;align-items:center;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--background);">
+                        <button class="btn btn-primary" onclick="saveProfile()" style="padding: 0.8rem 2rem;">Save Profile</button>
                         <div id="profile-message" style="flex:1;margin-bottom:0;"></div>
                     </div>
                 </div>
@@ -646,7 +746,16 @@
 <!-- ── STAFF PORTAL ───────────────────────────────────────────────────── -->
 <div id="staff-portal">
     <header class="navbar">
-        <div class="navbar-brand">🎯 LandIt <span style="font-size:0.75rem;opacity:0.7;font-weight:400;">Staff Portal</span></div>
+        <div class="navbar-brand">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="navbar-logo-mini" style="background:var(--background); padding:4px;">
+                <circle cx="100" cy="100" r="60" fill="none" stroke="#344e41" stroke-width="6"/>
+                <circle cx="100" cy="100" r="30" fill="none" stroke="#344e41" stroke-width="6"/>
+                <circle cx="100" cy="100" r="12" fill="#344e41"/>
+                <line x1="100" y1="100" x2="160" y2="40" stroke="#344e41" stroke-width="8" stroke-linecap="round"/>
+                <path d="M150 50 L170 30 L180 40 L160 60 Z" fill="#344e41"/>
+            </svg>
+            LANDIT <span style="font-size:0.9rem;opacity:0.8;font-weight:400;font-family:var(--font-body);margin-left:8px;">Staff Portal</span>
+        </div>
         <span class="navbar-user" id="staff-navbar-welcome"></span>
         <div class="navbar-actions">
             <button id="staff-btn-signout">Sign Out</button>
@@ -679,7 +788,7 @@
                         </tr>
                     </thead>
                     <tbody id="staff-placements-body">
-                        <tr><td colspan="6" class="loading" style="padding:2rem;">Loading...</td></tr>
+                        <tr><td colspan="6" class="loading" style="padding:3rem;text-align:center;">Loading data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -697,7 +806,7 @@
                         <tr><th>Name</th><th>Industry</th><th>Website</th><th></th></tr>
                     </thead>
                     <tbody id="staff-companies-body">
-                        <tr><td colspan="4" class="loading" style="padding:2rem;">Loading...</td></tr>
+                        <tr><td colspan="4" class="loading" style="padding:3rem;text-align:center;">Loading data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -708,7 +817,7 @@
 
 <!-- ── PLACEMENT MODAL ─────────────────────────────────────────────────── -->
 <div class="modal-overlay" id="placement-modal">
-    <div class="modal" style="max-width:620px;">
+    <div class="modal" style="max-width:680px;">
         <button class="modal-close" onclick="closePlacementModal()">×</button>
         <h2 id="placement-modal-title">Add Placement</h2>
 
@@ -722,7 +831,7 @@
         </div>
         <div class="form-group">
             <label>Description</label>
-            <textarea id="p-description" placeholder="Role overview, responsibilities..."></textarea>
+            <textarea id="p-description" placeholder="Role overview, responsibilities..." style="min-height: 120px;"></textarea>
         </div>
         <div class="placement-form-grid">
             <div class="form-group">
@@ -745,35 +854,35 @@
             </div>
         </div>
         <div class="form-group">
-            <label>Required Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+            <label>Required Skills <span style="color:#9ca3af;font-weight:400;font-size:0.8rem;">— comma separated</span></label>
             <input type="text" id="p-required-skills" placeholder="Python, SQL, React...">
         </div>
         <div class="form-group">
-            <label>Preferred Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+            <label>Preferred Skills <span style="color:#9ca3af;font-weight:400;font-size:0.8rem;">— comma separated</span></label>
             <input type="text" id="p-preferred-skills" placeholder="Docker, AWS, TypeScript...">
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
+        <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--background);">
             <button class="btn btn-secondary" onclick="closePlacementModal()">Cancel</button>
             <button class="btn btn-primary" onclick="savePlacement()">Save Placement</button>
         </div>
-        <div id="placement-modal-msg" style="margin-top:0.75rem;"></div>
+        <div id="placement-modal-msg" style="margin-top:1rem;"></div>
     </div>
 </div>
 
 <!-- ── COMPANY MODAL ───────────────────────────────────────────────────── -->
 <div class="modal-overlay" id="company-modal">
-    <div class="modal" style="max-width:480px;">
+    <div class="modal" style="max-width:500px;">
         <button class="modal-close" onclick="document.getElementById('company-modal').classList.remove('open')">×</button>
         <h2 id="company-modal-title">Add Company</h2>
         <div class="form-group"><label>Company Name</label><input type="text" id="c-name" placeholder="Accenture"></div>
         <div class="form-group"><label>Industry</label><input type="text" id="c-industry" placeholder="Technology, Finance..."></div>
         <div class="form-group"><label>Website URL (optional)</label><input type="url" id="c-website" placeholder="https://..."></div>
         <div class="form-group"><label>Description (optional)</label><textarea id="c-description" placeholder="Brief company overview..."></textarea></div>
-        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
+        <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--background);">
             <button class="btn btn-secondary" onclick="document.getElementById('company-modal').classList.remove('open')">Cancel</button>
             <button class="btn btn-primary" onclick="saveCompany()">Save Company</button>
         </div>
-        <div id="company-modal-msg" style="margin-top:0.75rem;"></div>
+        <div id="company-modal-msg" style="margin-top:1rem;"></div>
     </div>
 </div>
 
@@ -783,7 +892,8 @@
         <button class="modal-close" onclick="closeModal()">×</button>
 
         <div id="form-signin">
-            <h2>Sign In</h2>
+            <h2>Welcome Back</h2>
+            <p style="text-align:center; color:var(--text-gray); margin-bottom:1.5rem; font-size:0.95rem;">Sign in to your LandIt account</p>
             <div class="form-group">
                 <label>Email</label>
                 <input type="email" id="signin-email" placeholder="you@bath.ac.uk">
@@ -792,7 +902,7 @@
                 <label>Password</label>
                 <input type="password" id="signin-password" placeholder="Password">
             </div>
-            <button class="btn btn-primary" style="width:100%;" onclick="handleSignIn()">Sign In</button>
+            <button class="btn btn-primary" style="width:100%; padding:0.8rem; font-size:1rem; margin-top:0.5rem;" onclick="handleSignIn()">Sign In</button>
             <div id="auth-message"></div>
             <p class="form-link">No account? <a onclick="openModal('signup')">Sign up</a></p>
         </div>
@@ -800,15 +910,15 @@
         <div id="form-signup" style="display:none;">
             <h2 id="signup-form-title">Create Account</h2>
             <!-- Step progress bar -->
-            <div style="display:flex;gap:0.4rem;margin-bottom:1.25rem;">
-                <div id="step-dot-1" style="flex:1;height:3px;border-radius:2px;background:#2563eb;transition:background 0.2s;"></div>
-                <div id="step-dot-2" style="flex:1;height:3px;border-radius:2px;background:#e5e7eb;transition:background 0.2s;"></div>
+            <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;">
+                <div id="step-dot-1" style="flex:1;height:4px;border-radius:2px;background:var(--primary);transition:background 0.3s;"></div>
+                <div id="step-dot-2" style="flex:1;height:4px;border-radius:2px;background:var(--background);transition:background 0.3s;"></div>
             </div>
 
             <!-- Step 1: credentials -->
             <div id="signup-step-1">
-                <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 1 of 2 — Account details</p>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <p style="font-size:0.85rem;color:var(--text-gray);margin-bottom:1.2rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Step 1 of 2 — Account details</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div class="form-group">
                         <label>First Name</label>
                         <input type="text" id="signup-firstname" placeholder="First">
@@ -826,12 +936,12 @@
                     <label>Password</label>
                     <input type="password" id="signup-password" placeholder="Min. 6 characters">
                 </div>
-                <button class="btn btn-primary" style="width:100%;" onclick="signupNext()">Next →</button>
+                <button class="btn btn-primary" style="width:100%; padding:0.8rem; font-size:1rem; margin-top:0.5rem;" onclick="signupNext()">Continue →</button>
             </div>
 
             <!-- Step 2: profile -->
             <div id="signup-step-2" style="display:none;">
-                <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 2 of 2 — Your profile</p>
+                <p style="font-size:0.85rem;color:var(--text-gray);margin-bottom:1.2rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Step 2 of 2 — Your profile</p>
                 <div id="signup-step2-student-fields">
                     <div class="form-group">
                         <label>Degree Programme</label>
@@ -858,20 +968,20 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Preferred Location <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                    <label>Preferred Location <span style="color:#9ca3af;font-weight:400;font-size:0.8rem;">(optional)</span></label>
                     <input type="text" id="signup-location" placeholder="e.g. London, Remote, Anywhere...">
                 </div>
                 <div class="form-group">
-                    <label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                    <label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;font-size:0.8rem;">(optional)</span></label>
                     <input type="url" id="signup-linkedin" placeholder="https://linkedin.com/in/...">
                 </div>
-                <div style="display:flex;gap:0.5rem;">
-                    <button class="btn btn-secondary" style="flex:1;" onclick="signupBack()">← Back</button>
-                    <button class="btn btn-primary" style="flex:2;" onclick="handleSignUp()">Create Account</button>
+                <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+                    <button class="btn btn-secondary" style="flex:1;padding:0.8rem;" onclick="signupBack()">← Back</button>
+                    <button class="btn btn-primary" style="flex:2;padding:0.8rem;" onclick="handleSignUp()">Create Account</button>
                 </div>
             </div>
 
-            <div id="signup-message" style="margin-top:0.75rem;"></div>
+            <div id="signup-message" style="margin-top:1rem;"></div>
             <p class="form-link">Have an account? <a onclick="openModal('signin')">Sign in</a></p>
         </div>
     </div>
@@ -1030,7 +1140,7 @@ async function loadCV() {
                 <button class="btn btn-danger btn-sm" onclick="deleteCV('${data.id}', '${data.file_url}')">Delete</button>
             </div>`;
     } else {
-        container.innerHTML = '<p style="color:#9ca3af;font-size:0.875rem;margin-bottom:1rem;">No CV uploaded yet.</p>';
+        container.innerHTML = '<p style="color:var(--text-gray);font-size:0.9rem;margin-bottom:1.5rem;font-style:italic;">No CV uploaded yet.</p>';
     }
 }
 
@@ -1077,7 +1187,7 @@ async function loadBookmarks() {
     countEl.textContent = (data || []).length;
 
     if (!data || data.length === 0) {
-        list.innerHTML = `<div class="empty-state"><div class="icon">🔖</div><p>No saved placements yet. Bookmark roles from the Placements tab.</p></div>`;
+        list.innerHTML = `<div class="empty-state"><div class="icon">🔖</div><p>No saved placements yet.<br>Bookmark roles from the Placements tab.</p></div>`;
         return;
     }
 
@@ -1186,7 +1296,7 @@ function renderPlacementCard(p, opts = {}) {
             </div>
             <div class="score-badge ${scoreBadgeClass(match.score)}">${match.score}%</div>
         </div>
-        ${p.description ? `<p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.5rem;">${p.description.slice(0, 140)}${p.description.length > 140 ? '…' : ''}</p>` : ''}
+        ${p.description ? `<p style="font-size:0.9rem;color:var(--text-gray);margin-bottom:0.8rem;line-height:1.5;">${p.description.slice(0, 150)}${p.description.length > 150 ? '…' : ''}</p>` : ''}
         <div class="placement-meta">
             ${p.location ? `<span>📍 ${p.location}</span>` : ''}
             ${p.salary_range ? `<span>💷 £${Number(p.salary_range).toLocaleString()}/yr</span>` : ''}
@@ -1194,13 +1304,13 @@ function renderPlacementCard(p, opts = {}) {
         </div>
         ${skillTags ? `<div class="placement-skills">${skillTags}</div>` : ''}
         ${matchedTags || missingTags ? `
-        <div class="placement-skills" style="margin-top:0.5rem;">
+        <div class="placement-skills" style="margin-top:0.8rem;">
             ${matchedTags}${missingTags}
         </div>` : ''}
         <div class="placement-actions">
-            ${p.application_link ? `<a href="${p.application_link}" target="_blank" class="btn btn-primary btn-sm">Apply</a>` : p.companies?.website_url ? `<a href="${p.companies.website_url}" target="_blank" class="btn btn-primary btn-sm">Apply</a>` : ''}
-            <button class="btn btn-secondary btn-sm" onclick="toggleBookmark('${p.id}', this)" id="bm-${p.id}">
-                ${isBookmarked ? '🔖 Saved' : '🔖 Save'}
+            ${p.application_link ? `<a href="${p.application_link}" target="_blank" class="btn btn-primary">Apply Now</a>` : p.companies?.website_url ? `<a href="${p.companies.website_url}" target="_blank" class="btn btn-primary">Apply Now</a>` : ''}
+            <button class="btn btn-secondary" onclick="toggleBookmark('${p.id}', this)" id="bm-${p.id}">
+                ${isBookmarked ? '🔖 Saved' : '🔖 Save for later'}
             </button>
         </div>
     </div>`;
@@ -1236,16 +1346,16 @@ function renderAllPlacements() {
 function renderSkills() {
     const grid = document.getElementById('skills-grid');
     if (!userSkills.length) {
-        grid.innerHTML = `<p style="color:#9ca3af;font-size:0.875rem;">No skills yet — upload your CV to extract them automatically.</p>`;
+        grid.innerHTML = `<p style="color:var(--text-gray);font-size:0.9rem;font-style:italic;">No skills yet — upload your CV to extract them automatically.</p>`;
         return;
     }
     const levels = ['', 'Beginner', 'Elementary', 'Intermediate', 'Advanced', 'Expert'];
     grid.innerHTML = userSkills.map(s => `
         <span class="skill-tag">
             ${s.skills?.name || s.skill_name}
-            ${s.source === 'cv' ? `<span style="opacity:0.5;font-size:0.65rem;margin-left:2px;">CV</span>` : ''}
-            ${s.proficiency_level ? `<span style="opacity:0.6;font-size:0.7rem;">(${levels[s.proficiency_level] || s.proficiency_level})</span>` : ''}
-            <button onclick="removeSkill('${s.skill_id}', '${s.skills?.name || ''}')" title="Remove">×</button>
+            ${s.source === 'cv' ? `<span style="opacity:0.6;font-size:0.7rem;margin-left:4px;background:white;padding:2px 6px;border-radius:10px;">CV</span>` : ''}
+            ${s.proficiency_level ? `<span style="opacity:0.7;font-size:0.75rem;margin-left:4px;">(${levels[s.proficiency_level] || s.proficiency_level})</span>` : ''}
+            <button onclick="removeSkill('${s.skill_id}', '${s.skills?.name || ''}')" title="Remove" style="margin-left:6px;">×</button>
         </span>
     `).join('');
 }
@@ -1314,7 +1424,7 @@ document.getElementById('cv-file-input').addEventListener('change', async (e) =>
 
 const dropzone = document.getElementById('cv-dropzone');
 dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'); });
 dropzone.addEventListener('drop', async e => {
     e.preventDefault();
     dropzone.classList.remove('drag-over');
@@ -1426,7 +1536,7 @@ async function toggleBookmark(placementId, btn) {
             .eq('user_id', currentUser.id)
             .eq('placement_id', placementId);
         if (error) { alert('Could not remove bookmark: ' + error.message); }
-        else { btn.textContent = '🔖 Save'; }
+        else { btn.textContent = '🔖 Save for later'; }
     } else {
         const { error } = await sb.from('bookmarks').upsert(
             { user_id: currentUser.id, placement_id: placementId },
@@ -1502,7 +1612,7 @@ async function saveProfile() {
     renderProfile(profileData);
     const name = `${updates.first_name} ${updates.last_name}`.trim();
     if (name) document.getElementById('navbar-welcome').textContent = `Welcome, ${name}`;
-    showMsg(msgEl, 'Profile saved!', 'success');
+    showMsg(msgEl, 'Profile saved successfully!', 'success');
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────
@@ -1529,13 +1639,13 @@ function signupNext() {
     msgEl.innerHTML = '';
     document.getElementById('signup-step-1').style.display = 'none';
     document.getElementById('signup-step-2').style.display = 'block';
-    document.getElementById('step-dot-2').style.background = '#2563eb';
+    document.getElementById('step-dot-2').style.background = 'var(--primary)';
 }
 
 function signupBack() {
     document.getElementById('signup-step-2').style.display = 'none';
     document.getElementById('signup-step-1').style.display = 'block';
-    document.getElementById('step-dot-2').style.background = '#e5e7eb';
+    document.getElementById('step-dot-2').style.background = 'var(--background)';
 }
 
 async function handleSignUp() {
@@ -1596,14 +1706,14 @@ async function loadStaffCompanies() {
     // Render companies table
     const tbody = document.getElementById('staff-companies-body');
     if (!staffCompanies.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="text-align:center;padding:2rem;">No companies yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="text-align:center;padding:3rem;">No companies yet.</td></tr>';
         return;
     }
     tbody.innerHTML = staffCompanies.map(c => `
         <tr>
-            <td style="font-weight:600;">${c.name}</td>
+            <td style="font-weight:600;color:var(--primary);">${c.name}</td>
             <td>${c.industry || '—'}</td>
-            <td>${c.website_url ? `<a href="${c.website_url}" target="_blank" style="color:#2563eb;">${c.website_url}</a>` : '—'}</td>
+            <td>${c.website_url ? `<a href="${c.website_url}" target="_blank" style="color:var(--secondary);font-weight:500;">${c.website_url}</a>` : '—'}</td>
             <td style="text-align:right;">
                 <button class="btn btn-secondary btn-sm" onclick="openCompanyModal('${c.id}')">Edit</button>
             </td>
@@ -1619,19 +1729,19 @@ async function loadStaffPlacements() {
 
     const tbody = document.getElementById('staff-placements-body');
     if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9ca3af;">No placements yet. Add one to get started.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--text-gray);font-style:italic;">No placements yet. Add one to get started.</td></tr>';
         return;
     }
     tbody.innerHTML = data.map(p => `
         <tr>
-            <td style="font-weight:600;">${p.title || '—'}</td>
-            <td>${p.companies?.name || '—'}</td>
+            <td style="font-weight:600;color:var(--primary);">${p.title || '—'}</td>
+            <td style="font-weight:500;">${p.companies?.name || '—'}</td>
             <td>${p.location || '—'}</td>
             <td>${p.deadline ? new Date(p.deadline).toLocaleDateString() : '—'}</td>
             <td><span class="badge ${p.is_active ? 'badge-green' : 'badge-gray'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
             <td style="text-align:right;white-space:nowrap;">
                 <button class="btn btn-secondary btn-sm" onclick="openPlacementModal('${p.id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" style="margin-left:0.4rem;" onclick="togglePlacementActive('${p.id}', ${p.is_active})">${p.is_active ? 'Deactivate' : 'Activate'}</button>
+                <button class="btn btn-danger btn-sm" style="margin-left:0.5rem;" onclick="togglePlacementActive('${p.id}', ${p.is_active})">${p.is_active ? 'Deactivate' : 'Activate'}</button>
             </td>
         </tr>
     `).join('');
@@ -1800,7 +1910,7 @@ function openModal(mode) {
     // Reset signup to step 1
     document.getElementById('signup-step-1').style.display = 'block';
     document.getElementById('signup-step-2').style.display = 'none';
-    document.getElementById('step-dot-2').style.background = '#e5e7eb';
+    document.getElementById('step-dot-2').style.background = 'var(--background)';
 }
 function closeModal() { document.getElementById('auth-modal').classList.remove('open'); }
 document.getElementById('auth-modal').addEventListener('click', e => {
