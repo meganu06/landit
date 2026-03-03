@@ -1,22 +1,1817 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LandIt - Placement Matching</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-    
-    <!-- Atteron font - You'll need to add your actual Atteron font files -->
-    <!-- For now using Playfair Display as fallback -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LandIt — Placement Matching</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+
+        /* ── LANDING ─────────────────────────────── */
+        #landing {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .landing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        .landing-card h1 { font-size: 2.2rem; font-weight: 700; color: #2563eb; margin-bottom: 0.5rem; }
+        .landing-card p  { color: #6b7280; margin-bottom: 2rem; line-height: 1.6; }
+        .landing-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .feature-chip {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 1rem 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        .feature-chip .icon { font-size: 1.6rem; display: block; margin-bottom: 0.3rem; }
+        .landing-btns { display: flex; gap: 1rem; justify-content: center; }
+
+        /* ── DASHBOARD ───────────────────────────── */
+        #dashboard { display: none; min-height: 100vh; }
+
+        /* Top navbar */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: #2563eb;
+            color: white;
+            padding: 0 1.5rem;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+        }
+        .navbar-brand { font-weight: 700; font-size: 1.2rem; }
+        .navbar-user  { font-size: 0.9rem; opacity: 0.9; }
+        .navbar-actions { display: flex; gap: 0.5rem; align-items: center; }
+        .navbar-actions button {
+            background: rgba(255,255,255,0.15);
+            border: none; color: white;
+            padding: 0.4rem 0.9rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+        .navbar-actions button:hover { background: rgba(255,255,255,0.25); }
+        #btn-signout { background: rgba(239,68,68,0.7) !important; }
+        #btn-signout:hover { background: rgba(239,68,68,0.9) !important; }
+
+        /* Tab navigation */
+        .tab-nav {
+            position: fixed; top: 56px; left: 0; right: 0; z-index: 99;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 1.5rem;
+            display: flex;
+            gap: 0;
+        }
+        .tab-btn {
+            background: none; border: none;
+            padding: 0.9rem 1.2rem;
+            font-size: 0.9rem; font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .tab-btn:hover { color: #2563eb; }
+        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+        /* Main content */
+        .content {
+            margin-top: 104px;
+            padding: 1.5rem;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-top: calc(104px + 1.5rem);
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── SHARED COMPONENTS ───────────────────── */
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.6rem 1.2rem;
+            border: none; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 500;
+            cursor: pointer; font-family: inherit;
+            transition: all 0.15s;
+        }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #f3f4f6; color: #374151; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-danger { background: #fee2e2; color: #dc2626; }
+        .btn-danger:hover { background: #fecaca; }
+        .btn-sm { padding: 0.35rem 0.8rem; font-size: 0.8rem; }
+
+        .card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+        .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1rem; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-green  { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef9c3; color: #854d0e; }
+        .badge-red    { background: #fee2e2; color: #991b1b; }
+        .badge-blue   { background: #dbeafe; color: #1e40af; }
+        .badge-gray   { background: #f3f4f6; color: #6b7280; }
+
+        .skill-tag {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: #eff6ff; color: #1d4ed8;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+        }
+        .skill-tag button {
+            background: none; border: none;
+            color: #6b7280; cursor: pointer;
+            font-size: 1rem; line-height: 1;
+            padding: 0;
+        }
+        .skill-tag button:hover { color: #dc2626; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #9ca3af;
+        }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .empty-state p { font-size: 0.95rem; }
+
+        .loading { color: #9ca3af; font-size: 0.9rem; padding: 1rem 0; }
+
+        .alert {
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .alert-success { background: #dcfce7; color: #166534; }
+        .alert-error   { background: #fee2e2; color: #991b1b; }
+
+        /* ── OVERVIEW TAB ────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 2rem; font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .stat-card .stat-label { font-size: 0.8rem; color: #6b7280; font-weight: 500; }
+        .stat-card.green .stat-value { color: #10b981; }
+        .stat-card.blue  .stat-value { color: #2563eb; }
+        .stat-card.purple .stat-value { color: #7c3aed; }
+        .stat-card.orange .stat-value { color: #f59e0b; }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem;
+        }
+        .section-header h2 { font-size: 1.1rem; font-weight: 600; }
+
+        /* ── PLACEMENT CARD ──────────────────────── */
+        .placement-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.15s;
+        }
+        .placement-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .placement-header {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 0.75rem;
+        }
+        .placement-title { font-size: 1rem; font-weight: 600; color: #111827; }
+        .placement-company { font-size: 0.85rem; color: #6b7280; margin-top: 0.15rem; }
+        .placement-meta {
+            display: flex; gap: 1rem; flex-wrap: wrap;
+            margin: 0.75rem 0; font-size: 0.82rem; color: #6b7280;
+        }
+        .placement-meta span { display: flex; align-items: center; gap: 0.3rem; }
+        .placement-skills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+        .placement-actions {
+            display: flex; gap: 0.5rem; margin-top: 1rem;
+            padding-top: 0.75rem; border-top: 1px solid #f3f4f6;
+            align-items: center;
+        }
+        .score-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            font-weight: 700; font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .score-high   { background: #dcfce7; color: #166534; }
+        .score-medium { background: #fef9c3; color: #854d0e; }
+        .score-low    { background: #fee2e2; color: #991b1b; }
+        .score-none   { background: #f3f4f6; color: #9ca3af; }
+
+        /* ── SKILLS TAB ──────────────────────────── */
+        .skills-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .add-skill-form {
+            display: flex; gap: 0.75rem; align-items: center;
+            flex-wrap: wrap; margin-top: 1rem;
+        }
+        .add-skill-form input, .add-skill-form select {
+            padding: 0.6rem 0.9rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+        }
+        .add-skill-form input:focus, .add-skill-form select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+        /* ── CV TAB ──────────────────────────────── */
+        .cv-dropzone {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 2.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .cv-dropzone:hover, .cv-dropzone.drag-over {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .cv-dropzone .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .cv-dropzone p { color: #6b7280; font-size: 0.9rem; }
+        .cv-dropzone strong { color: #2563eb; }
+        #cv-file-input { display: none; }
+        .cv-current {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1rem; background: #f8fafc;
+            border: 1px solid #e5e7eb; border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .cv-current .cv-icon { font-size: 2rem; }
+        .cv-current .cv-info { flex: 1; }
+        .cv-current .cv-name { font-weight: 600; font-size: 0.95rem; }
+        .cv-current .cv-meta { font-size: 0.8rem; color: #9ca3af; margin-top: 0.2rem; }
+
+        /* ── AUTH MODAL ──────────────────────────── */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: white; border-radius: 16px;
+            padding: 2rem; width: 90%; max-width: 460px;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem;
+            background: none; border: none;
+            font-size: 1.4rem; cursor: pointer; color: #9ca3af;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: #374151; }
+        .form-group input {
+            width: 100%; padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; outline: none;
+        }
+        .form-group input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-group select {
+            width: 100%; padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; outline: none; background: white;
+        }
+        .form-group select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-link { color: #6b7280; font-size: 0.85rem; text-align: center; margin-top: 1rem; }
+
+        /* ── PROFILE TAB ─────────────────────────── */
+        .profile-avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white; font-size: 1.6rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .profile-header {
+            display: flex; align-items: center; gap: 1.25rem;
+            margin-bottom: 1.5rem; padding-bottom: 1.25rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .profile-header-info h3 { font-size: 1.2rem; font-weight: 700; }
+        .profile-header-info p  { color: #6b7280; font-size: 0.875rem; margin-top: 0.2rem; }
+        .profile-form { display: grid; gap: 1rem; }
+        .profile-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .profile-form-row { grid-template-columns: 1fr; } }
+        .profile-field label { display: block; font-size: 0.85rem; font-weight: 500; color: #374151; margin-bottom: 0.4rem; }
+        .profile-field input, .profile-field select, .profile-field textarea {
+            width: 100%; padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.9rem; font-family: inherit; outline: none; background: white;
+        }
+        .profile-field input:focus, .profile-field select:focus, .profile-field textarea:focus {
+            border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        .profile-field textarea { resize: vertical; min-height: 80px; }
+        .profile-links { display: flex; gap: 0.75rem; margin-top: 0.25rem; flex-wrap: wrap; }
+        .profile-link-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: #f3f4f6; color: #374151;
+            padding: 0.3rem 0.8rem; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 500; text-decoration: none;
+        }
+        .profile-link-badge:hover { background: #e5e7eb; }
+
+        /* ── LANDING ROLE CARDS ──────────────────── */
+        .landing-roles {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .role-card {
+            border: 2px solid #e5e7eb; border-radius: 14px;
+            padding: 1.25rem 1rem; cursor: pointer;
+            transition: all 0.15s; text-align: center;
+        }
+        .role-card:hover { border-color: #2563eb; background: #eff6ff; }
+        .role-card .role-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .role-card .role-title { font-weight: 700; font-size: 1rem; color: #111827; }
+        .role-card .role-desc  { font-size: 0.78rem; color: #6b7280; margin-top: 0.25rem; }
+
+        /* ── STAFF PORTAL ────────────────────────── */
+        #staff-portal { display: none; min-height: 100vh; }
+        .staff-table { width: 100%; border-collapse: collapse; }
+        .staff-table th {
+            text-align: left; font-size: 0.8rem; font-weight: 600;
+            color: #6b7280; padding: 0.6rem 1rem;
+            background: #f8fafc; border-bottom: 1px solid #e5e7eb;
+        }
+        .staff-table td {
+            padding: 0.9rem 1rem; border-bottom: 1px solid #f3f4f6;
+            font-size: 0.875rem; vertical-align: middle;
+        }
+        .staff-table tr:last-child td { border-bottom: none; }
+        .staff-table tr:hover td { background: #fafafa; }
+        .staff-card {
+            background: white; border: 1px solid #e5e7eb;
+            border-radius: 12px; overflow: hidden;
+        }
+        .placement-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .placement-form-grid { grid-template-columns: 1fr; } }
+        .form-group textarea {
+            width: 100%; padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; outline: none;
+            resize: vertical; min-height: 90px;
+        }
+        .form-group textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-link a { color: #2563eb; cursor: pointer; text-decoration: none; }
+        #auth-message { margin-top: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<!-- ── LANDING (unauthenticated) ─────────────────────────────────────── -->
+<div id="landing">
+    <div class="landing-card">
+        <h1>LandIt</h1>
+        <p>Your AI-powered placement companion. Upload your CV, get matched to placements, and track your skill gaps.</p>
+        <div class="landing-features">
+            <div class="feature-chip"><span class="icon">🎯</span>Smart Matching</div>
+            <div class="feature-chip"><span class="icon">📄</span>CV Analysis</div>
+            <div class="feature-chip"><span class="icon">🚀</span>Skill Gaps</div>
+        </div>
+        <p style="font-size:0.85rem;color:#9ca3af;margin-bottom:0.75rem;">I am a...</p>
+        <div class="landing-roles">
+            <div class="role-card" onclick="selectRole('student')">
+                <div class="role-icon">🎓</div>
+                <div class="role-title">Student</div>
+                <div class="role-desc">Find and apply for placements</div>
+            </div>
+            <div class="role-card" onclick="selectRole('admin')">
+                <div class="role-icon">🏢</div>
+                <div class="role-title">Placement Staff</div>
+                <div class="role-desc">Manage placement opportunities</div>
+            </div>
+        </div>
+        <div class="landing-btns">
+            <button class="btn btn-secondary" onclick="openModal('signin')">Sign In</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── DASHBOARD (authenticated) ─────────────────────────────────────── -->
+<div id="dashboard">
+    <header class="navbar">
+        <div class="navbar-brand">🎯 LandIt</div>
+        <span class="navbar-user" id="navbar-welcome"></span>
+        <div class="navbar-actions">
+            <button id="btn-signout">Sign Out</button>
+        </div>
+    </header>
+
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+        <button class="tab-btn" onclick="switchTab('placements')">Placements</button>
+        <button class="tab-btn" onclick="switchTab('skills')">My Skills</button>
+        <button class="tab-btn" onclick="switchTab('cv')">CV</button>
+        <button class="tab-btn" onclick="switchTab('bookmarks')">Bookmarks</button>
+        <button class="tab-btn" onclick="switchTab('profile')">Profile</button>
+    </nav>
+
+    <div class="content">
+
+        <!-- OVERVIEW -->
+        <div id="tab-overview" class="tab-panel active">
+            <div class="stats-grid">
+                <div class="stat-card green">
+                    <div class="stat-value" id="stat-best-match">—</div>
+                    <div class="stat-label">Best Match Score</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-value" id="stat-total-placements">—</div>
+                    <div class="stat-label">Total Placements</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-value" id="stat-skills-count">—</div>
+                    <div class="stat-label">Your Skills</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-value" id="stat-bookmarks-count">—</div>
+                    <div class="stat-label">Bookmarks</div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <h2>Top Placement Matches</h2>
+                <button class="btn btn-primary btn-sm" onclick="runMatching()">Refresh Matches</button>
+            </div>
+            <div id="top-matches-list"><div class="loading">Loading matches...</div></div>
+        </div>
+
+        <!-- PLACEMENTS -->
+        <div id="tab-placements" class="tab-panel">
+            <div class="section-header">
+                <h2>All Placements</h2>
+                <span id="placements-count" style="color:#9ca3af;font-size:0.85rem;"></span>
+            </div>
+            <div id="placements-list"><div class="loading">Loading placements...</div></div>
+        </div>
+
+        <!-- SKILLS -->
+        <div id="tab-skills" class="tab-panel">
+            <div class="card">
+                <div class="card-title">Your Skills</div>
+                <p style="color:#6b7280;font-size:0.875rem;margin-bottom:1rem;">Skills are automatically extracted when you upload your CV. You can also add them manually below.</p>
+                <div class="skills-grid" id="skills-grid">
+                    <div class="loading">Loading skills...</div>
+                </div>
+                <details style="margin-top:1.25rem;">
+                    <summary style="cursor:pointer;font-weight:600;font-size:0.9rem;color:#2563eb;list-style:none;display:flex;align-items:center;gap:0.4rem;">
+                        &#43; Add a skill manually
+                    </summary>
+                    <div style="margin-top:0.75rem;">
+                        <div class="add-skill-form">
+                            <input type="text" id="skill-input" placeholder="e.g. Python, React, SQL..." style="flex:1;min-width:200px;">
+                            <select id="skill-level">
+                                <option value="1">Beginner</option>
+                                <option value="2">Elementary</option>
+                                <option value="3" selected>Intermediate</option>
+                                <option value="4">Advanced</option>
+                                <option value="5">Expert</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="addSkill()">Add</button>
+                        </div>
+                        <div id="skill-message" style="margin-top:0.75rem;"></div>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- CV -->
+        <div id="tab-cv" class="tab-panel">
+            <div class="card">
+                <div class="card-title">Your CV</div>
+                <div id="cv-current"></div>
+                <div class="cv-dropzone" id="cv-dropzone" onclick="document.getElementById('cv-file-input').click()">
+                    <div class="icon">📄</div>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p style="margin-top:0.4rem;font-size:0.8rem;">PDF or DOCX — max 10 MB</p>
+                </div>
+                <input type="file" id="cv-file-input" accept=".pdf,.docx">
+                <div id="cv-message" style="margin-top:1rem;"></div>
+            </div>
+        </div>
+
+        <!-- BOOKMARKS -->
+        <div id="tab-bookmarks" class="tab-panel">
+            <div class="section-header"><h2>Saved Placements</h2></div>
+            <div id="bookmarks-list"><div class="loading">Loading bookmarks...</div></div>
+        </div>
+
+        <!-- PROFILE -->
+        <div id="tab-profile" class="tab-panel">
+            <div class="card" style="max-width:680px;">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">?</div>
+                    <div class="profile-header-info">
+                        <h3 id="profile-full-name">—</h3>
+                        <p id="profile-email-display">—</p>
+                        <div class="profile-links" id="profile-ext-links" style="margin-top:0.5rem;"></div>
+                    </div>
+                </div>
+
+                <div class="card-title">Edit Profile</div>
+                <div class="profile-form">
+                    <div class="profile-form-row">
+                        <div class="profile-field">
+                            <label>First Name</label>
+                            <input type="text" id="profile-firstname" placeholder="First">
+                        </div>
+                        <div class="profile-field">
+                            <label>Last Name</label>
+                            <input type="text" id="profile-lastname" placeholder="Last">
+                        </div>
+                    </div>
+                    <div class="profile-field">
+                        <label>Degree Programme</label>
+                        <select id="profile-degree">
+                            <option value="">Not specified</option>
+                            <option>BSc Computer Science</option>
+                            <option>MEng Computer Science</option>
+                            <option>BSc Computer Science &amp; Mathematics</option>
+                            <option>BSc Computer Science with Artificial Intelligence</option>
+                            <option>BSc Computer Science for Business</option>
+                            <option>BSc Software Engineering</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="profile-field">
+                        <label>Year of Study</label>
+                        <select id="profile-year">
+                            <option value="">Not specified</option>
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4 / Masters</option>
+                        </select>
+                    </div>
+                    <div class="profile-field">
+                        <label>About Me</label>
+                        <textarea id="profile-bio" placeholder="Brief intro — interests, goals, experience..."></textarea>
+                    </div>
+                    <div class="profile-form-row">
+                        <div class="profile-field">
+                            <label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                            <input type="url" id="profile-linkedin" placeholder="https://linkedin.com/in/...">
+                        </div>
+                        <div class="profile-field">
+                            <label>GitHub URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                            <input type="url" id="profile-github" placeholder="https://github.com/...">
+                        </div>
+                    </div>
+                    <div class="profile-field">
+                        <label>Preferred Location</label>
+                        <input type="text" id="profile-location" placeholder="e.g. London, Remote, Anywhere...">
+                    </div>
+                    <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.5rem;">
+                        <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+                        <div id="profile-message" style="flex:1;margin-bottom:0;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── STAFF PORTAL ───────────────────────────────────────────────────── -->
+<div id="staff-portal">
+    <header class="navbar">
+        <div class="navbar-brand">🎯 LandIt <span style="font-size:0.75rem;opacity:0.7;font-weight:400;">Staff Portal</span></div>
+        <span class="navbar-user" id="staff-navbar-welcome"></span>
+        <div class="navbar-actions">
+            <button id="staff-btn-signout">Sign Out</button>
+        </div>
+    </header>
+
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="switchStaffTab('placements', this)">Placements</button>
+        <button class="tab-btn" onclick="switchStaffTab('companies', this)">Companies</button>
+    </nav>
+
+    <div class="content">
+
+        <!-- PLACEMENTS -->
+        <div id="staff-tab-placements" class="tab-panel active">
+            <div class="section-header">
+                <h2>Manage Placements</h2>
+                <button class="btn btn-primary" onclick="openPlacementModal()">+ Add Placement</button>
+            </div>
+            <div class="staff-card">
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Company</th>
+                            <th>Location</th>
+                            <th>Deadline</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="staff-placements-body">
+                        <tr><td colspan="6" class="loading" style="padding:2rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COMPANIES -->
+        <div id="staff-tab-companies" class="tab-panel">
+            <div class="section-header">
+                <h2>Companies</h2>
+                <button class="btn btn-primary" onclick="openCompanyModal()">+ Add Company</button>
+            </div>
+            <div class="staff-card">
+                <table class="staff-table">
+                    <thead>
+                        <tr><th>Name</th><th>Industry</th><th>Website</th><th></th></tr>
+                    </thead>
+                    <tbody id="staff-companies-body">
+                        <tr><td colspan="4" class="loading" style="padding:2rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── PLACEMENT MODAL ─────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="placement-modal">
+    <div class="modal" style="max-width:620px;">
+        <button class="modal-close" onclick="closePlacementModal()">×</button>
+        <h2 id="placement-modal-title">Add Placement</h2>
+
+        <div class="form-group">
+            <label>Company</label>
+            <select id="p-company"><option value="">Select company...</option></select>
+        </div>
+        <div class="form-group">
+            <label>Role Title</label>
+            <input type="text" id="p-title" placeholder="e.g. Software Engineer Intern">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="p-description" placeholder="Role overview, responsibilities..."></textarea>
+        </div>
+        <div class="placement-form-grid">
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="p-location" placeholder="e.g. London / Remote">
+            </div>
+            <div class="form-group">
+                <label>Salary (£/year, optional)</label>
+                <input type="number" id="p-salary" placeholder="e.g. 28000">
+            </div>
+        </div>
+        <div class="placement-form-grid">
+            <div class="form-group">
+                <label>Deadline (optional)</label>
+                <input type="date" id="p-deadline">
+            </div>
+            <div class="form-group">
+                <label>Application Link (optional)</label>
+                <input type="url" id="p-link" placeholder="https://...">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Required Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+            <input type="text" id="p-required-skills" placeholder="Python, SQL, React...">
+        </div>
+        <div class="form-group">
+            <label>Preferred Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+            <input type="text" id="p-preferred-skills" placeholder="Docker, AWS, TypeScript...">
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
+            <button class="btn btn-secondary" onclick="closePlacementModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="savePlacement()">Save Placement</button>
+        </div>
+        <div id="placement-modal-msg" style="margin-top:0.75rem;"></div>
+    </div>
+</div>
+
+<!-- ── COMPANY MODAL ───────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="company-modal">
+    <div class="modal" style="max-width:480px;">
+        <button class="modal-close" onclick="document.getElementById('company-modal').classList.remove('open')">×</button>
+        <h2 id="company-modal-title">Add Company</h2>
+        <div class="form-group"><label>Company Name</label><input type="text" id="c-name" placeholder="Accenture"></div>
+        <div class="form-group"><label>Industry</label><input type="text" id="c-industry" placeholder="Technology, Finance..."></div>
+        <div class="form-group"><label>Website URL (optional)</label><input type="url" id="c-website" placeholder="https://..."></div>
+        <div class="form-group"><label>Description (optional)</label><textarea id="c-description" placeholder="Brief company overview..."></textarea></div>
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('company-modal').classList.remove('open')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveCompany()">Save Company</button>
+        </div>
+        <div id="company-modal-msg" style="margin-top:0.75rem;"></div>
+    </div>
+</div>
+
+<!-- ── AUTH MODAL ─────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="auth-modal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+
+        <div id="form-signin">
+            <h2>Sign In</h2>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="signin-email" placeholder="you@bath.ac.uk">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="signin-password" placeholder="Password">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="handleSignIn()">Sign In</button>
+            <div id="auth-message"></div>
+            <p class="form-link">No account? <a onclick="openModal('signup')">Sign up</a></p>
+        </div>
+
+        <div id="form-signup" style="display:none;">
+            <h2 id="signup-form-title">Create Account</h2>
+            <!-- Step progress bar -->
+            <div style="display:flex;gap:0.4rem;margin-bottom:1.25rem;">
+                <div id="step-dot-1" style="flex:1;height:3px;border-radius:2px;background:#2563eb;transition:background 0.2s;"></div>
+                <div id="step-dot-2" style="flex:1;height:3px;border-radius:2px;background:#e5e7eb;transition:background 0.2s;"></div>
+            </div>
+
+            <!-- Step 1: credentials -->
+            <div id="signup-step-1">
+                <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 1 of 2 — Account details</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="signup-firstname" placeholder="First">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="signup-lastname" placeholder="Last">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bath University Email</label>
+                    <input type="email" id="signup-email" placeholder="you@bath.ac.uk">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signup-password" placeholder="Min. 6 characters">
+                </div>
+                <button class="btn btn-primary" style="width:100%;" onclick="signupNext()">Next →</button>
+            </div>
+
+            <!-- Step 2: profile -->
+            <div id="signup-step-2" style="display:none;">
+                <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 2 of 2 — Your profile</p>
+                <div id="signup-step2-student-fields">
+                    <div class="form-group">
+                        <label>Degree Programme</label>
+                        <select id="signup-degree">
+                            <option value="">Select your degree...</option>
+                            <option>BSc Computer Science</option>
+                            <option>MEng Computer Science</option>
+                            <option>BSc Computer Science &amp; Mathematics</option>
+                            <option>BSc Computer Science with Artificial Intelligence</option>
+                            <option>BSc Computer Science for Business</option>
+                            <option>BSc Software Engineering</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Year of Study</label>
+                        <select id="signup-year">
+                            <option value="">Select year...</option>
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4 / Masters</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Location <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                    <input type="text" id="signup-location" placeholder="e.g. London, Remote, Anywhere...">
+                </div>
+                <div class="form-group">
+                    <label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                    <input type="url" id="signup-linkedin" placeholder="https://linkedin.com/in/...">
+                </div>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn-secondary" style="flex:1;" onclick="signupBack()">← Back</button>
+                    <button class="btn btn-primary" style="flex:2;" onclick="handleSignUp()">Create Account</button>
+                </div>
+            </div>
+
+            <div id="signup-message" style="margin-top:0.75rem;"></div>
+            <p class="form-link">Have an account? <a onclick="openModal('signin')">Sign in</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── PDF.JS WORKER ─────────────────────────────────────────────────────
+if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+
+// ── SUPABASE INIT ─────────────────────────────────────────────────────
+const sb = window.supabase.createClient(
+    'https://wbcgymgqqrhwgshkdfcx.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiY2d5bWdxcXJod2dzaGtkZmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyNzU5NTQsImV4cCI6MjA4MDg1MTk1NH0.js40qIOVH_PPaHyzo0AjTuiVsPxRy9PAaHkTtcR_P1A'
+);
+
+let currentUser = null;
+let userSkills = [];      // [{skill_name, proficiency_level, id, skills:{name}}]
+let allPlacements = [];   // placements with companies + placement_skills
+let matchScores = {};     // placement_id → score
+let pendingRole = 'student'; // set when user picks a role on landing
+
+function selectRole(role) {
+    pendingRole = role;
+    // Update signup form title/step-2 visibility based on role
+    const isStaff = role === 'admin';
+    document.getElementById('signup-form-title').textContent = isStaff ? 'Create Staff Account' : 'Create Account';
+    document.getElementById('signup-step2-student-fields').style.display = isStaff ? 'none' : 'block';
+    openModal('signup');
+}
+
+// ── AUTH STATE ────────────────────────────────────────────────────────
+sb.auth.onAuthStateChange((event, session) => {
+    if (session?.user) {
+        currentUser = session.user;
+        showDashboard();
+    } else {
+        currentUser = null;
+        showLanding();
+    }
+});
+
+window.addEventListener('load', async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+        currentUser = session.user;
+        showDashboard();
+    }
+});
+
+// ── UI STATE ──────────────────────────────────────────────────────────
+function showLanding() {
+    document.getElementById('landing').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('staff-portal').style.display = 'none';
+}
+
+async function showDashboard() {
+    closeModal();
+    // Fetch role from users table to decide which portal to show
+    const { data: profile } = await sb.from('users').select('role, first_name, last_name').eq('id', currentUser.id).maybeSingle();
+    const role = profile?.role || 'student';
+    const name = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || currentUser.email.split('@')[0];
+
+    document.getElementById('landing').style.display = 'none';
+
+    if (role === 'admin') {
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('staff-portal').style.display = 'block';
+        document.getElementById('staff-navbar-welcome').textContent = `Welcome, ${name}`;
+        loadStaffData();
+    } else {
+        document.getElementById('staff-portal').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('navbar-welcome').textContent = `Welcome, ${name}`;
+        loadDashboard();
+    }
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────
+function switchTab(tab) {
+    document.querySelectorAll('#dashboard .tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('#dashboard .tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    event.target.classList.add('active');
+}
+
+function switchStaffTab(tab, btn) {
+    document.querySelectorAll('#staff-portal .tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('#staff-portal .tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`staff-tab-${tab}`).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ── LOAD DASHBOARD DATA ───────────────────────────────────────────────
+async function loadDashboard() {
+    await Promise.all([loadSkills(), loadPlacements(), loadCV(), loadProfile()]);
+    runMatching();
+    loadBookmarks();
+}
+
+async function loadSkills() {
+    const { data, error } = await sb
+        .from('student_skills')
+        .select('*, skills(name, category)')
+        .eq('user_id', currentUser.id);
+
+    if (error) { console.error('Skills error:', error); return; }
+    userSkills = data || [];
+    renderSkills();
+    document.getElementById('stat-skills-count').textContent = userSkills.length;
+}
+
+async function loadPlacements() {
+    const { data, error } = await sb
+        .from('placements')
+        .select(`
+            *,
+            companies (name, industry, website_url),
+            placement_skills (
+                importance,
+                skills (name, category)
+            )
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+    if (error) { console.error('Placements error:', error); return; }
+    allPlacements = data || [];
+    document.getElementById('stat-total-placements').textContent = allPlacements.length;
+    document.getElementById('placements-count').textContent = `${allPlacements.length} open roles`;
+}
+
+async function loadCV() {
+    const { data } = await sb
+        .from('cv')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('uploaded_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    const container = document.getElementById('cv-current');
+    if (data) {
+        const date = new Date(data.uploaded_at).toLocaleDateString();
+        const fileName = data.file_url.split('/').pop().split('?')[0];
+        container.innerHTML = `
+            <div class="cv-current">
+                <div class="cv-icon">📄</div>
+                <div class="cv-info">
+                    <div class="cv-name">${fileName}</div>
+                    <div class="cv-meta">Uploaded ${date}</div>
+                </div>
+                <a href="${data.file_url}" target="_blank" class="btn btn-secondary btn-sm">View</a>
+                <button class="btn btn-danger btn-sm" onclick="deleteCV('${data.id}', '${data.file_url}')">Delete</button>
+            </div>`;
+    } else {
+        container.innerHTML = '<p style="color:#9ca3af;font-size:0.875rem;margin-bottom:1rem;">No CV uploaded yet.</p>';
+    }
+}
+
+async function deleteCV(cvId, fileUrl) {
+    if (!confirm('Delete your CV? This will also remove all skills extracted from it.')) return;
+
+    // Delete from storage
+    const urlPath = fileUrl.split('/storage/v1/object/public/cvs/')[1];
+    if (urlPath) {
+        await sb.storage.from('cvs').remove([decodeURIComponent(urlPath)]);
+    }
+
+    // Delete DB record
+    const { error } = await sb.from('cv').delete().eq('id', cvId);
+    if (error) { alert('Failed to delete CV: ' + error.message); return; }
+
+    // Remove skills that came from CV
+    await sb.from('student_skills')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('source', 'cv');
+
+    loadCV();
+    loadSkills();
+    runMatching();
+}
+
+async function loadBookmarks() {
+    const { data, error } = await sb
+        .from('bookmarks')
+        .select(`*, placements(*, companies(name, industry))`)
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+    const list = document.getElementById('bookmarks-list');
+    const countEl = document.getElementById('stat-bookmarks-count');
+
+    if (error) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">🔖</div><p>Bookmarks not set up yet.</p></div>`;
+        countEl.textContent = '0';
+        return;
+    }
+
+    countEl.textContent = (data || []).length;
+
+    if (!data || data.length === 0) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">🔖</div><p>No saved placements yet. Bookmark roles from the Placements tab.</p></div>`;
+        return;
+    }
+
+    list.innerHTML = data.map(b => renderPlacementCard(b.placements, { bookmarked: true, inBookmarksTab: true })).join('');
+}
+
+// ── MATCHING ALGORITHM ────────────────────────────────────────────────
+function calculateScore(placement) {
+    const userSkillNames = userSkills.map(s => (s.skills?.name || s.skill_name || '').toLowerCase());
+    const placementSkills = placement.placement_skills || [];
+    const required = placement.required_skills || [];
+    const desired  = placement.desired_skills  || [];
+
+    if (placementSkills.length > 0) {
+        const reqPs  = placementSkills.filter(ps => ps.importance === 'required');
+        const prefPs = placementSkills.filter(ps => ps.importance !== 'required');
+        const matchedReq  = reqPs.filter(ps  => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
+        const matchedPref = prefPs.filter(ps => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
+        const totalWeight = reqPs.length * 2 + prefPs.length;
+        const score = totalWeight > 0
+            ? Math.round((matchedReq.length * 2 + matchedPref.length) / totalWeight * 100)
+            : 0;
+        const matched = [...matchedReq, ...matchedPref].map(ps => ps.skills?.name).filter(Boolean);
+        const missing = reqPs.filter(ps => !userSkillNames.includes((ps.skills?.name || '').toLowerCase()))
+            .map(ps => ps.skills?.name).filter(Boolean);
+        return { score, matched, missing };
+    }
+
+    if (required.length > 0 || desired.length > 0) {
+        const matchedReq  = required.filter(s => userSkillNames.includes((s || '').toLowerCase()));
+        const matchedDes  = desired.filter(s  => userSkillNames.includes((s || '').toLowerCase()));
+        const totalWeight = required.length * 2 + desired.length;
+        const score = totalWeight > 0
+            ? Math.round((matchedReq.length * 2 + matchedDes.length) / totalWeight * 100)
+            : 0;
+        return { score, matched: [...matchedReq, ...matchedDes], missing: required.filter(s => !userSkillNames.includes((s || '').toLowerCase())) };
+    }
+
+    return { score: 0, matched: [], missing: [] };
+}
+
+async function runMatching() {
+    if (!allPlacements.length) return;
+
+    matchScores = {};
+    const inserts = [];
+
+    allPlacements.forEach(p => {
+        const { score, matched, missing } = calculateScore(p);
+        matchScores[p.id] = { score, matched, missing };
+        inserts.push({
+            user_id: currentUser.id,
+            placement_id: p.id,
+            fit_score: score,
+            gap_analysis_report: { skills_matched: matched, skills_missing: missing },
+        });
+    });
+
+    // Replace match results for this user
+    await sb.from('match_results').delete().eq('user_id', currentUser.id);
+    if (inserts.length) await sb.from('match_results').insert(inserts);
+
+    // Update stats
+    const scores = Object.values(matchScores).map(m => m.score);
+    const best = scores.length ? Math.max(...scores) : 0;
+    document.getElementById('stat-best-match').textContent = `${best}%`;
+
+    renderTopMatches();
+    renderAllPlacements();
+}
+
+// ── RENDER FUNCTIONS ──────────────────────────────────────────────────
+function scoreBadgeClass(score) {
+    if (score >= 70) return 'score-high';
+    if (score >= 40) return 'score-medium';
+    if (score > 0)   return 'score-low';
+    return 'score-none';
+}
+
+function renderPlacementCard(p, opts = {}) {
+    const match = matchScores[p.id] || { score: 0, matched: [], missing: [] };
+    const company = p.companies?.name || 'Unknown company';
+    const isBookmarked = opts.bookmarked;
+    const placementSkills = (p.placement_skills || []).slice(0, 5);
+
+    const skillTags = placementSkills.map(ps =>
+        `<span class="badge badge-blue">${ps.skills?.name || ''}</span>`
+    ).join('') || (p.required_skills || []).slice(0, 5).map(s =>
+        `<span class="badge badge-blue">${s}</span>`
+    ).join('');
+
+    const matchedTags = match.matched.slice(0, 3).map(s =>
+        `<span class="badge badge-green">✓ ${s}</span>`
+    ).join('');
+
+    const missingTags = match.missing.slice(0, 3).map(s =>
+        `<span class="badge badge-red">✗ ${s}</span>`
+    ).join('');
+
+    return `
+    <div class="placement-card" id="card-${p.id}">
+        <div class="placement-header">
+            <div>
+                <div class="placement-title">${p.title || 'Placement'}</div>
+                <div class="placement-company">${company} ${p.companies?.industry ? '· ' + p.companies.industry : ''}</div>
+            </div>
+            <div class="score-badge ${scoreBadgeClass(match.score)}">${match.score}%</div>
+        </div>
+        ${p.description ? `<p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.5rem;">${p.description.slice(0, 140)}${p.description.length > 140 ? '…' : ''}</p>` : ''}
+        <div class="placement-meta">
+            ${p.location ? `<span>📍 ${p.location}</span>` : ''}
+            ${p.salary_range ? `<span>💷 £${Number(p.salary_range).toLocaleString()}/yr</span>` : ''}
+            ${p.deadline ? `<span>⏰ Deadline: ${new Date(p.deadline).toLocaleDateString()}</span>` : ''}
+        </div>
+        ${skillTags ? `<div class="placement-skills">${skillTags}</div>` : ''}
+        ${matchedTags || missingTags ? `
+        <div class="placement-skills" style="margin-top:0.5rem;">
+            ${matchedTags}${missingTags}
+        </div>` : ''}
+        <div class="placement-actions">
+            ${p.application_link ? `<a href="${p.application_link}" target="_blank" class="btn btn-primary btn-sm">Apply</a>` : p.companies?.website_url ? `<a href="${p.companies.website_url}" target="_blank" class="btn btn-primary btn-sm">Apply</a>` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="toggleBookmark('${p.id}', this)" id="bm-${p.id}">
+                ${isBookmarked ? '🔖 Saved' : '🔖 Save'}
+            </button>
+        </div>
+    </div>`;
+}
+
+function renderTopMatches() {
+    const sorted = [...allPlacements]
+        .map(p => ({ ...p, _score: matchScores[p.id]?.score || 0 }))
+        .sort((a, b) => b._score - a._score)
+        .slice(0, 5);
+
+    const el = document.getElementById('top-matches-list');
+    if (!sorted.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">🎯</div><p>No placements available yet.</p></div>`;
+        return;
+    }
+    el.innerHTML = sorted.map(p => renderPlacementCard(p)).join('');
+}
+
+function renderAllPlacements() {
+    const sorted = [...allPlacements]
+        .map(p => ({ ...p, _score: matchScores[p.id]?.score || 0 }))
+        .sort((a, b) => b._score - a._score);
+
+    const el = document.getElementById('placements-list');
+    if (!sorted.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">💼</div><p>No active placements found.</p></div>`;
+        return;
+    }
+    el.innerHTML = sorted.map(p => renderPlacementCard(p)).join('');
+}
+
+function renderSkills() {
+    const grid = document.getElementById('skills-grid');
+    if (!userSkills.length) {
+        grid.innerHTML = `<p style="color:#9ca3af;font-size:0.875rem;">No skills yet — upload your CV to extract them automatically.</p>`;
+        return;
+    }
+    const levels = ['', 'Beginner', 'Elementary', 'Intermediate', 'Advanced', 'Expert'];
+    grid.innerHTML = userSkills.map(s => `
+        <span class="skill-tag">
+            ${s.skills?.name || s.skill_name}
+            ${s.source === 'cv' ? `<span style="opacity:0.5;font-size:0.65rem;margin-left:2px;">CV</span>` : ''}
+            ${s.proficiency_level ? `<span style="opacity:0.6;font-size:0.7rem;">(${levels[s.proficiency_level] || s.proficiency_level})</span>` : ''}
+            <button onclick="removeSkill('${s.skill_id}', '${s.skills?.name || ''}')" title="Remove">×</button>
+        </span>
+    `).join('');
+}
+
+// ── SKILLS CRUD ───────────────────────────────────────────────────────
+async function addSkill() {
+    const input = document.getElementById('skill-input');
+    const levelSelect = document.getElementById('skill-level');
+    const msgEl = document.getElementById('skill-message');
+    const skillName = input.value.trim();
+
+    if (!skillName) { showMsg(msgEl, 'Enter a skill name.', 'error'); return; }
+
+    // Find or create skill in skills table
+    let skillId;
+    const { data: existing } = await sb
+        .from('skills')
+        .select('id')
+        .ilike('name', skillName)
+        .limit(1)
+        .maybeSingle();
+
+    if (existing) {
+        skillId = existing.id;
+    } else {
+        const { data: newSkill, error: createErr } = await sb
+            .from('skills')
+            .insert({ name: skillName, category: 'General' })
+            .select('id')
+            .single();
+        if (createErr) {
+            showMsg(msgEl, 'Could not add skill: ' + createErr.message, 'error');
+            return;
+        }
+        skillId = newSkill.id;
+    }
+
+    const { error } = await sb.from('student_skills').upsert(
+        { user_id: currentUser.id, skill_id: skillId, proficiency_level: parseInt(levelSelect.value), source: 'manual' },
+        { onConflict: 'user_id,skill_id' }
+    );
+
+    if (error) { showMsg(msgEl, 'Error: ' + error.message, 'error'); return; }
+
+    input.value = '';
+    showMsg(msgEl, `Added "${skillName}"!`, 'success');
+    await loadSkills();
+    runMatching();
+}
+
+async function removeSkill(skillId, name) {
+    if (!confirm(`Remove "${name}" from your skills?`)) return;
+    const { error } = await sb.from('student_skills').delete()
+        .eq('user_id', currentUser.id)
+        .eq('skill_id', skillId);
+    if (!error) { await loadSkills(); runMatching(); }
+}
+
+// ── CV UPLOAD ─────────────────────────────────────────────────────────
+document.getElementById('cv-file-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    await uploadCV(file);
+    e.target.value = '';
+});
+
+const dropzone = document.getElementById('cv-dropzone');
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', async e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) await uploadCV(file);
+});
+
+async function uploadCV(file) {
+    const msgEl = document.getElementById('cv-message');
+    const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowed.includes(file.type)) {
+        showMsg(msgEl, 'Only PDF and DOCX files are accepted.', 'error'); return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        showMsg(msgEl, 'File must be under 10 MB.', 'error'); return;
+    }
+
+    showMsg(msgEl, 'Uploading...', 'success');
+    const ext = file.name.split('.').pop();
+    const path = `${currentUser.id}/${Date.now()}.${ext}`;
+
+    const { error: uploadErr } = await sb.storage.from('cvs').upload(path, file, { contentType: file.type });
+    if (uploadErr) { showMsg(msgEl, 'Upload failed: ' + uploadErr.message, 'error'); return; }
+
+    const { data: { publicUrl } } = sb.storage.from('cvs').getPublicUrl(path);
+
+    // Extract text from CV client-side
+    showMsg(msgEl, 'Extracting skills from your CV...', 'success');
+    let extractedText = '';
+    try {
+        if (file.type === 'application/pdf') {
+            extractedText = await extractTextFromPDF(file);
+        } else {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer });
+            extractedText = result.value;
+        }
+    } catch (e) {
+        console.warn('Text extraction failed:', e);
+    }
+
+    const { error: dbErr } = await sb.from('cv').insert({
+        user_id: currentUser.id,
+        file_url: publicUrl,
+        parsed_content: extractedText || null,
+    });
+
+    if (dbErr) { showMsg(msgEl, 'Saved file but DB error: ' + dbErr.message, 'error'); return; }
+
+    if (extractedText) {
+        await extractAndSaveSkills(extractedText, msgEl);
+    } else {
+        showMsg(msgEl, 'CV uploaded. Could not extract text — add skills manually.', 'success');
+    }
+
+    loadCV();
+    loadSkills();
+}
+
+async function extractTextFromPDF(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(item => item.str).join(' ') + '\n';
+    }
+    return text;
+}
+
+async function extractAndSaveSkills(text, msgEl) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { showMsg(msgEl, 'Not authenticated.', 'error'); return; }
+
+    const res = await fetch('http://localhost:3001/api/cv/extract-skills', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ text }),
+    });
+
+    const json = await res.json();
+
+    if (!res.ok) {
+        showMsg(msgEl, `CV uploaded but skill extraction failed: ${json.error}`, 'error');
+        return;
+    }
+
+    const skills = json.skills || [];
+    if (skills.length === 0) {
+        showMsg(msgEl, 'CV uploaded. No skills identified — you can add them manually.', 'success');
+        return;
+    }
+
+    showMsg(msgEl, `CV uploaded! Found ${skills.length} skills: ${skills.map(s => s.name).join(', ')}`, 'success');
+    runMatching();
+}
+
+// ── BOOKMARKS ─────────────────────────────────────────────────────────
+async function toggleBookmark(placementId, btn) {
+    const isSaved = btn.textContent.includes('Saved');
+    btn.disabled = true;
+
+    if (isSaved) {
+        const { error } = await sb.from('bookmarks').delete()
+            .eq('user_id', currentUser.id)
+            .eq('placement_id', placementId);
+        if (error) { alert('Could not remove bookmark: ' + error.message); }
+        else { btn.textContent = '🔖 Save'; }
+    } else {
+        const { error } = await sb.from('bookmarks').upsert(
+            { user_id: currentUser.id, placement_id: placementId },
+            { onConflict: 'user_id,placement_id' }
+        );
+        if (error) { alert('Could not save bookmark: ' + error.message); }
+        else { btn.textContent = '🔖 Saved'; }
+    }
+
+    btn.disabled = false;
+    loadBookmarks();
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────────
+let profileData = null;
+
+async function loadProfile() {
+    const { data, error } = await sb
+        .from('users')
+        .select('*')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+    if (!error && data) {
+        profileData = data;
+        renderProfile(data);
+        // Update navbar with real name from DB
+        const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || currentUser.email.split('@')[0];
+        document.getElementById('navbar-welcome').textContent = `Welcome, ${name}`;
+    }
+}
+
+function renderProfile(data) {
+    const first = data.first_name || '';
+    const last  = data.last_name  || '';
+    const initials = ((first[0] || '') + (last[0] || '')).toUpperCase() || '?';
+    document.getElementById('profile-avatar').textContent = initials;
+    document.getElementById('profile-full-name').textContent = `${first} ${last}`.trim() || '—';
+    document.getElementById('profile-email-display').textContent = data.email || currentUser.email || '—';
+
+    document.getElementById('profile-firstname').value = first;
+    document.getElementById('profile-lastname').value  = last;
+    document.getElementById('profile-degree').value    = data.degree_programme || '';
+    document.getElementById('profile-year').value      = data.year_of_study   || '';
+    document.getElementById('profile-bio').value       = data.bio              || '';
+    document.getElementById('profile-linkedin').value  = data.linkedin_url     || '';
+    document.getElementById('profile-github').value    = data.github_url       || '';
+    document.getElementById('profile-location').value  = data.location_preference || '';
+
+    // Render quick-links under the avatar
+    const links = [];
+    if (data.linkedin_url) links.push(`<a href="${data.linkedin_url}" target="_blank" class="profile-link-badge">LinkedIn</a>`);
+    if (data.github_url)   links.push(`<a href="${data.github_url}"   target="_blank" class="profile-link-badge">GitHub</a>`);
+    document.getElementById('profile-ext-links').innerHTML = links.join('');
+}
+
+async function saveProfile() {
+    const msgEl = document.getElementById('profile-message');
+    const updates = {
+        first_name:          document.getElementById('profile-firstname').value.trim(),
+        last_name:           document.getElementById('profile-lastname').value.trim(),
+        degree_programme:    document.getElementById('profile-degree').value   || null,
+        year_of_study:       document.getElementById('profile-year').value     ? parseInt(document.getElementById('profile-year').value) : null,
+        bio:                 document.getElementById('profile-bio').value.trim()      || null,
+        linkedin_url:        document.getElementById('profile-linkedin').value.trim() || null,
+        github_url:          document.getElementById('profile-github').value.trim()   || null,
+        location_preference: document.getElementById('profile-location').value.trim() || null,
+    };
+
+    const { error } = await sb.from('users').update(updates).eq('id', currentUser.id);
+    if (error) { showMsg(msgEl, error.message, 'error'); return; }
+
+    profileData = { ...profileData, ...updates };
+    renderProfile(profileData);
+    const name = `${updates.first_name} ${updates.last_name}`.trim();
+    if (name) document.getElementById('navbar-welcome').textContent = `Welcome, ${name}`;
+    showMsg(msgEl, 'Profile saved!', 'success');
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────
+async function handleSignIn() {
+    const email    = document.getElementById('signin-email').value;
+    const password = document.getElementById('signin-password').value;
+    const msgEl    = document.getElementById('auth-message');
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { showMsg(msgEl, error.message, 'error'); }
+}
+
+function signupNext() {
+    const firstName = document.getElementById('signup-firstname').value.trim();
+    const lastName  = document.getElementById('signup-lastname').value.trim();
+    const email     = document.getElementById('signup-email').value.trim();
+    const password  = document.getElementById('signup-password').value;
+    const msgEl     = document.getElementById('signup-message');
+
+    if (!firstName || !lastName) { showMsg(msgEl, 'Please enter your full name.', 'error'); return; }
+    if (!email.endsWith('@bath.ac.uk')) { showMsg(msgEl, 'Only @bath.ac.uk email addresses are allowed.', 'error'); return; }
+    if (password.length < 8) { showMsg(msgEl, 'Password must be at least 8 characters.', 'error'); return; }
+
+    msgEl.innerHTML = '';
+    document.getElementById('signup-step-1').style.display = 'none';
+    document.getElementById('signup-step-2').style.display = 'block';
+    document.getElementById('step-dot-2').style.background = '#2563eb';
+}
+
+function signupBack() {
+    document.getElementById('signup-step-2').style.display = 'none';
+    document.getElementById('signup-step-1').style.display = 'block';
+    document.getElementById('step-dot-2').style.background = '#e5e7eb';
+}
+
+async function handleSignUp() {
+    const firstName = document.getElementById('signup-firstname').value.trim();
+    const lastName  = document.getElementById('signup-lastname').value.trim();
+    const email     = document.getElementById('signup-email').value.trim();
+    const password  = document.getElementById('signup-password').value;
+    const degree    = document.getElementById('signup-degree').value || null;
+    const year      = document.getElementById('signup-year').value ? parseInt(document.getElementById('signup-year').value) : null;
+    const location  = document.getElementById('signup-location').value.trim() || null;
+    const linkedin  = document.getElementById('signup-linkedin').value.trim() || null;
+    const msgEl     = document.getElementById('signup-message');
+
+    const { error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { first_name: firstName, last_name: lastName } }
+    });
+
+    if (error) { showMsg(msgEl, error.message, 'error'); return; }
+
+    // Save extended profile fields right after signup (session is briefly active)
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+        await sb.from('users').update({
+            role: pendingRole,
+            degree_programme: degree,
+            year_of_study: year,
+            location_preference: location,
+            linkedin_url: linkedin,
+        }).eq('id', session.user.id);
+    }
+
+    await sb.auth.signOut();
+    showMsg(msgEl, 'Account created! Please sign in.', 'success');
+    setTimeout(() => openModal('signin'), 2000);
+}
+
+document.getElementById('btn-signout').addEventListener('click', () => sb.auth.signOut());
+document.getElementById('staff-btn-signout').addEventListener('click', () => sb.auth.signOut());
+
+// ── STAFF PORTAL ───────────────────────────────────────────────────────
+let staffCompanies = [];
+let editingPlacementId = null;
+
+async function loadStaffData() {
+    await Promise.all([loadStaffPlacements(), loadStaffCompanies()]);
+}
+
+async function loadStaffCompanies() {
+    const { data } = await sb.from('companies').select('*').order('name');
+    staffCompanies = data || [];
+
+    // Populate company select in placement modal
+    const select = document.getElementById('p-company');
+    select.innerHTML = '<option value="">Select company...</option>' +
+        staffCompanies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+    // Render companies table
+    const tbody = document.getElementById('staff-companies-body');
+    if (!staffCompanies.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="text-align:center;padding:2rem;">No companies yet.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = staffCompanies.map(c => `
+        <tr>
+            <td style="font-weight:600;">${c.name}</td>
+            <td>${c.industry || '—'}</td>
+            <td>${c.website_url ? `<a href="${c.website_url}" target="_blank" style="color:#2563eb;">${c.website_url}</a>` : '—'}</td>
+            <td style="text-align:right;">
+                <button class="btn btn-secondary btn-sm" onclick="openCompanyModal('${c.id}')">Edit</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function loadStaffPlacements() {
+    const { data } = await sb
+        .from('placements')
+        .select('*, companies(name)')
+        .order('created_at', { ascending: false });
+
+    const tbody = document.getElementById('staff-placements-body');
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9ca3af;">No placements yet. Add one to get started.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(p => `
+        <tr>
+            <td style="font-weight:600;">${p.title || '—'}</td>
+            <td>${p.companies?.name || '—'}</td>
+            <td>${p.location || '—'}</td>
+            <td>${p.deadline ? new Date(p.deadline).toLocaleDateString() : '—'}</td>
+            <td><span class="badge ${p.is_active ? 'badge-green' : 'badge-gray'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td style="text-align:right;white-space:nowrap;">
+                <button class="btn btn-secondary btn-sm" onclick="openPlacementModal('${p.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm" style="margin-left:0.4rem;" onclick="togglePlacementActive('${p.id}', ${p.is_active})">${p.is_active ? 'Deactivate' : 'Activate'}</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openPlacementModal(placementId = null) {
+    editingPlacementId = placementId;
+    document.getElementById('placement-modal-title').textContent = placementId ? 'Edit Placement' : 'Add Placement';
+    document.getElementById('placement-modal-msg').innerHTML = '';
+
+    // Clear form
+    ['p-title','p-description','p-location','p-salary','p-deadline','p-link','p-required-skills','p-preferred-skills']
+        .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-company').value = '';
+
+    if (placementId) loadPlacementForEdit(placementId);
+    document.getElementById('placement-modal').classList.add('open');
+}
+
+async function loadPlacementForEdit(id) {
+    const { data } = await sb
+        .from('placements')
+        .select('*, placement_skills(importance, skills(name))')
+        .eq('id', id)
+        .single();
+    if (!data) return;
+
+    document.getElementById('p-company').value     = data.company_id || '';
+    document.getElementById('p-title').value       = data.title || '';
+    document.getElementById('p-description').value = data.description || '';
+    document.getElementById('p-location').value    = data.location || '';
+    document.getElementById('p-salary').value      = data.salary_range || '';
+    document.getElementById('p-deadline').value    = data.deadline?.slice(0, 10) || '';
+    document.getElementById('p-link').value        = data.application_link || '';
+
+    const req  = (data.placement_skills || []).filter(ps => ps.importance === 'required').map(ps => ps.skills?.name).filter(Boolean).join(', ');
+    const pref = (data.placement_skills || []).filter(ps => ps.importance !== 'required').map(ps => ps.skills?.name).filter(Boolean).join(', ');
+    document.getElementById('p-required-skills').value  = req;
+    document.getElementById('p-preferred-skills').value = pref;
+}
+
+function closePlacementModal() {
+    document.getElementById('placement-modal').classList.remove('open');
+    editingPlacementId = null;
+}
+
+async function savePlacement() {
+    const msgEl = document.getElementById('placement-modal-msg');
+    const companyId   = document.getElementById('p-company').value;
+    const title       = document.getElementById('p-title').value.trim();
+    const description = document.getElementById('p-description').value.trim();
+    const location    = document.getElementById('p-location').value.trim();
+
+    if (!companyId || !title || !description || !location) {
+        showMsg(msgEl, 'Company, title, description and location are required.', 'error'); return;
+    }
+
+    const payload = {
+        company_id:       companyId,
+        title,
+        description,
+        location,
+        salary_range:     document.getElementById('p-salary').value ? parseFloat(document.getElementById('p-salary').value) : null,
+        deadline:         document.getElementById('p-deadline').value || null,
+        application_link: document.getElementById('p-link').value.trim() || null,
+        is_active:        true,
+    };
+
+    let placementId = editingPlacementId;
+    if (placementId) {
+        const { error } = await sb.from('placements').update(payload).eq('id', placementId);
+        if (error) { showMsg(msgEl, error.message, 'error'); return; }
+    } else {
+        const { data, error } = await sb.from('placements').insert(payload).select().single();
+        if (error) { showMsg(msgEl, error.message, 'error'); return; }
+        placementId = data.id;
+    }
+
+    await savePlacementSkills(placementId);
+    closePlacementModal();
+    loadStaffPlacements();
+}
+
+async function savePlacementSkills(placementId) {
+    const requiredNames  = document.getElementById('p-required-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+    const preferredNames = document.getElementById('p-preferred-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+
+    await sb.from('placement_skills').delete().eq('placement_id', placementId);
+
+    const all = [
+        ...requiredNames.map(name => ({ name, importance: 'required' })),
+        ...preferredNames.map(name => ({ name, importance: 'preferred' })),
+    ];
+
+    for (const { name, importance } of all) {
+        const { data: existing } = await sb.from('skills').select('id').ilike('name', name).limit(1).maybeSingle();
+        let skillId = existing?.id;
+        if (!skillId) {
+            const { data: created } = await sb.from('skills').insert({ name, category: 'technical' }).select('id').single();
+            skillId = created?.id;
+        }
+        if (skillId) await sb.from('placement_skills').insert({ placement_id: placementId, skill_id: skillId, importance });
+    }
+}
+
+async function togglePlacementActive(id, currentlyActive) {
+    if (!confirm(`${currentlyActive ? 'Deactivate' : 'Activate'} this placement?`)) return;
+    await sb.from('placements').update({ is_active: !currentlyActive }).eq('id', id);
+    loadStaffPlacements();
+}
+
+// ── COMPANY MODAL ──────────────────────────────────────────────────────
+let editingCompanyId = null;
+
+function openCompanyModal(companyId = null) {
+    editingCompanyId = companyId;
+    document.getElementById('company-modal-title').textContent = companyId ? 'Edit Company' : 'Add Company';
+    document.getElementById('company-modal-msg').innerHTML = '';
+    ['c-name','c-industry','c-website','c-description'].forEach(id => document.getElementById(id).value = '');
+
+    if (companyId) {
+        const company = staffCompanies.find(c => c.id === companyId);
+        if (company) {
+            document.getElementById('c-name').value        = company.name || '';
+            document.getElementById('c-industry').value    = company.industry || '';
+            document.getElementById('c-website').value     = company.website_url || '';
+            document.getElementById('c-description').value = company.description || '';
+        }
+    }
+    document.getElementById('company-modal').classList.add('open');
+}
+
+async function saveCompany() {
+    const msgEl = document.getElementById('company-modal-msg');
+    const name  = document.getElementById('c-name').value.trim();
+    if (!name) { showMsg(msgEl, 'Company name is required.', 'error'); return; }
+
+    const payload = {
+        name,
+        industry:    document.getElementById('c-industry').value.trim() || null,
+        website_url: document.getElementById('c-website').value.trim()  || null,
+        description: document.getElementById('c-description').value.trim() || null,
+    };
+
+    if (editingCompanyId) {
+        const { error } = await sb.from('companies').update(payload).eq('id', editingCompanyId);
+        if (error) { showMsg(msgEl, error.message, 'error'); return; }
+    } else {
+        const { error } = await sb.from('companies').insert(payload);
+        if (error) { showMsg(msgEl, error.message, 'error'); return; }
+    }
+
+    document.getElementById('company-modal').classList.remove('open');
+    loadStaffCompanies();
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────────
+function openModal(mode) {
+    // If opening sign-in directly (not via selectRole), reset role to student
+    if (mode === 'signin') pendingRole = 'student';
+    document.getElementById('auth-modal').classList.add('open');
+    document.getElementById('form-signin').style.display = mode === 'signin' ? 'block' : 'none';
+    document.getElementById('form-signup').style.display = mode === 'signup' ? 'block' : 'none';
+    document.getElementById('auth-message').innerHTML  = '';
+    document.getElementById('signup-message').innerHTML = '';
+    // Reset signup to step 1
+    document.getElementById('signup-step-1').style.display = 'block';
+    document.getElementById('signup-step-2').style.display = 'none';
+    document.getElementById('step-dot-2').style.background = '#e5e7eb';
+}
+function closeModal() { document.getElementById('auth-modal').classList.remove('open'); }
+document.getElementById('auth-modal').addEventListener('click', e => {
+    if (e.target.id === 'auth-modal') closeModal();
+});
+
+// ── UTILITY ───────────────────────────────────────────────────────────
+function showMsg(el, text, type) {
+    el.innerHTML = `<div class="alert alert-${type}">${text}</div>`;
+}
+</script>
+
+</body>
 </html>
