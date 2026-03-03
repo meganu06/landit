@@ -17,7 +17,7 @@ export default function Dashboard() {
           <div className="w-16 h-16 rounded-full bg-background flex items-center justify-center p-2">
             <img src="/logo.png" alt="LandIt" className="w-full h-full object-contain" />
           </div>
-          <span className="font-heading text-3xl font-bold tracking-wide">LandIt</span>
+          <span className="font-body text-3xl font-bold tracking-tight">LandIt</span>
         </div>
         <span className="text-base font-body">Welcome, {userName}</span>
         <Button onClick={signOut} size="sm" className="bg-red-600 hover:bg-red-700">
