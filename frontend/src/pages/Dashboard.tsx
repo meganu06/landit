@@ -14,7 +14,9 @@ export default function Dashboard() {
       {/* Navbar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-primary text-white px-6 py-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-4">
-          <img src="/logo.png" alt="LandIt" className="h-12 w-12 object-contain bg-background rounded-full p-1" />
+          <div className="w-16 h-16 rounded-full bg-background flex items-center justify-center p-2">
+            <img src="/logo.png" alt="LandIt" className="w-full h-full object-contain" />
+          </div>
           <span className="font-heading text-3xl font-bold tracking-wide">LandIt</span>
         </div>
         <span className="text-base font-body">Welcome, {userName}</span>
@@ -24,7 +26,7 @@ export default function Dashboard() {
       </header>
 
       {/* Tab Navigation */}
-      <nav className="fixed top-20 left-0 right-0 z-40 bg-white border-b border-background px-6 flex gap-0 shadow-sm">
+      <nav className="fixed top-24 left-0 right-0 z-40 bg-white border-b border-background px-6 flex gap-0 shadow-sm">
         {[
           { id: 'overview', label: 'Overview' },
           { id: 'placements', label: 'Placements' },
@@ -48,7 +50,7 @@ export default function Dashboard() {
       </nav>
 
       {/* Content */}
-      <main className="pt-36 px-6 max-w-7xl mx-auto pb-12">
+      <main className="pt-40 px-6 max-w-7xl mx-auto pb-12">
         {activeTab === 'overview' && (
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -84,7 +86,7 @@ export default function Dashboard() {
               <p className="text-text-gray font-medium">No skills yet — upload your CV to extract them automatically.</p>
             </div>
           </Card>
-        )}
+        )
 
         {activeTab === 'cv' && (
           <Card title="Your CV">
