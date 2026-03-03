@@ -86,7 +86,7 @@ export default function Dashboard() {
               <p className="text-text-gray font-medium">No skills yet — upload your CV to extract them automatically.</p>
             </div>
           </Card>
-        )
+        )}
 
         {activeTab === 'cv' && (
           <Card title="Your CV">
