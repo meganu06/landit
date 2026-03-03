@@ -2,12 +2,100 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/Button'
 import { Card } from '@/components/Card'
+import { supabase } from '@/lib/supabase'
 
 export default function Dashboard() {
   const { profile, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [uploadSuccess, setUploadSuccess] = useState('')
 
   const userName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'User'
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError('Please upload a PDF or DOCX file')
+      return
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('File size must be less than 10MB')
+      return
+    }
+
+    setUploading(true)
+    setUploadError('')
+    setUploadSuccess('')
+
+    try {
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setUploadError('Not authenticated')
+        return
+      }
+
+      // Upload CV
+      const formData = new FormData()
+      formData.append('cv', file)
+
+      const uploadRes = await fetch('http://localhost:3001/api/cv/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      })
+
+      if (!uploadRes.ok) {
+        const error = await uploadRes.json()
+        throw new Error(error.error || 'Upload failed')
+      }
+
+      const cvData = await uploadRes.json()
+      console.log('CV uploaded:', cvData)
+
+      // Extract text from CV (simplified - in reality you'd parse PDF/DOCX)
+      // For now, we'll prompt user to paste text or auto-extract
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        const text = event.target?.result as string
+        
+        // Extract skills
+        const skillsRes = await fetch('http://localhost:3001/api/cv/extract-skills', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text }),
+        })
+
+        if (!skillsRes.ok) {
+          throw new Error('Skill extraction failed')
+        }
+
+        const { skills } = await skillsRes.json()
+        console.log('Extracted skills:', skills)
+        
+        setUploadSuccess(`CV uploaded! Extracted ${skills.length} skills. Check the Skills tab.`)
+      }
+
+      reader.readAsText(file)
+    } catch (err: any) {
+      console.error('Upload error:', err)
+      setUploadError(err.message || 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -91,11 +179,36 @@ export default function Dashboard() {
         {activeTab === 'cv' && (
           <Card title="Your CV">
             <p className="text-text-gray mb-6">Upload your CV to automatically extract your skills and get matched with placements.</p>
-            <div className="border-2 border-dashed border-secondary rounded-2xl p-16 text-center cursor-pointer hover:border-primary hover:bg-background/50 transition-all">
-              <div className="text-6xl mb-4">📄</div>
-              <p className="text-lg font-semibold text-primary mb-2">Click to upload or drag and drop</p>
-              <p className="text-sm text-text-gray">PDF or DOCX — max 10 MB</p>
-            </div>
+            
+            {uploadError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                {uploadError}
+              </div>
+            )}
+            
+            {uploadSuccess && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                {uploadSuccess}
+              </div>
+            )}
+
+            <label htmlFor="cv-upload" className="block">
+              <input
+                id="cv-upload"
+                type="file"
+                accept=".pdf,.docx"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="hidden"
+              />
+              <div className="border-2 border-dashed border-secondary rounded-2xl p-16 text-center cursor-pointer hover:border-primary hover:bg-background/50 transition-all">
+                <div className="text-6xl mb-4">{uploading ? '⏳' : '📄'}</div>
+                <p className="text-lg font-semibold text-primary mb-2">
+                  {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
+                </p>
+                <p className="text-sm text-text-gray">PDF or DOCX — max 10 MB</p>
+              </div>
+            </label>
           </Card>
         )}
 
