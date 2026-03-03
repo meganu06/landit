@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/config/supabase.ts'
+import * as pdfjsLib from 'pdfjs-dist'
+import mammoth from 'mammoth'
+
+// Set PDF.js worker
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`
+}
 
 export function useCV() {
   const [cv, setCV] = useState<any | null>(null)
@@ -61,15 +68,36 @@ export function useCV() {
 
       const { data: { publicUrl } } = supabase.storage.from('cvs').getPublicUrl(path)
 
+      // Extract text from CV
+      onProgress?.('Extracting text from your CV...')
+      let extractedText = ''
+      try {
+        if (file.type === 'application/pdf') {
+          extractedText = await extractTextFromPDF(file)
+        } else {
+          const arrayBuffer = await file.arrayBuffer()
+          const result = await mammoth.extractRawText({ arrayBuffer })
+          extractedText = result.value
+        }
+      } catch (e) {
+        console.warn('Text extraction failed:', e)
+      }
+
       const { error: dbErr } = await supabase.from('cv').insert({
         user_id: user.id,
         file_url: publicUrl,
-        parsed_content: null,
+        parsed_content: extractedText || null,
       })
 
       if (dbErr) throw dbErr
 
-      onProgress?.('CV uploaded! You can now add skills manually.')
+      // Extract and save skills using backend API
+      if (extractedText && extractedText.length > 20) {
+        await extractAndSaveSkills(extractedText, onProgress)
+      } else {
+        onProgress?.('CV uploaded. Could not extract text — add skills manually.')
+      }
+
       await loadCV()
       return true
     } catch (err) {
@@ -113,5 +141,53 @@ export function useCV() {
     uploadCV,
     deleteCV,
     reload: loadCV
+  }
+}
+
+async function extractTextFromPDF(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer()
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+  let text = ''
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i)
+    const content = await page.getTextContent()
+    text += content.items.map((item: any) => item.str).join(' ') + '\n'
+  }
+  return text
+}
+
+async function extractAndSaveSkills(text: string, onProgress?: (status: string) => void) {
+  onProgress?.('Extracting skills with AI...')
+  
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('Not authenticated')
+
+  try {
+    const res = await fetch('http://localhost:3001/api/cv/extract-skills', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ text }),
+    })
+
+    const json = await res.json()
+
+    if (!res.ok) {
+      onProgress?.(`CV uploaded but skill extraction failed: ${json.error || 'Unknown error'}`)
+      return
+    }
+
+    const skills = json.skills || []
+    if (skills.length === 0) {
+      onProgress?.('CV uploaded. No skills identified — you can add them manually.')
+      return
+    }
+
+    onProgress?.(`CV uploaded! Found ${skills.length} skills: ${skills.map((s: any) => s.name).join(', ')}`)
+  } catch (err) {
+    console.error('Skill extraction error:', err)
+    onProgress?.('CV uploaded. Skill extraction failed — add skills manually.')
   }
 }
