@@ -4,7 +4,6 @@ import { SomeDbType } from "../database/types";
 import { calculateGap } from "../services/gap-analysis.service";*/
 
 import { Request, Response } from "express";
-// backend/src/services/gap-analysis.service.ts
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
