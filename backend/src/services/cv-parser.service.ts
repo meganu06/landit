@@ -1,4 +1,3 @@
-// backend/src/services/cv-parser.service.ts
 import fs from "fs";
 // pdf-parse has broken typings; import via require and cast to any so we can call it
 const pdfParse: any = require("pdf-parse");
