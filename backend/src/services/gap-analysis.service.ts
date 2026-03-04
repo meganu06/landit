@@ -8,7 +8,7 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// The LLM should ideally output a list of skills with no repeats, in lemmatized, lowercase fomr.
+// The LLM should ideally output a list of skills with no repeats, in lemmatized, lowercase form.
 async function extractSkills(text: string): Promise<string[]> {
   const prompt = `
 You are an expert at reading resumes and job descriptions.
