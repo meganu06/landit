@@ -79,8 +79,10 @@ export async function describeGap(missing: string[]): Promise<string> {
     input: `The candidate does not mention the following skills:\n\n${missing
       .map((s) => "- " + s)
       .join("\n")}\n\nWrite a single polite paragraph that a career advisor
-might send to the candidate explaining the missing skills and suggesting
-how to acquire them.`,
+might send to the candidate explaining the missing skills. Do research if necessary and find the 
+top resources on the internet for it. For example, The Odin Project for web development, Ruby, 
+and Javascript. In this manner list every missing skill and provide at least one resource (with a link)
+to acquire that skill.`,
   });
   return resp.output_text;
 }
