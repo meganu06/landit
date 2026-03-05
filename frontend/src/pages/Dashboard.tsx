@@ -5,6 +5,7 @@ import { Card } from '@/components/Card'
 import { usePlacements } from '@/hooks/usePlacements'
 import { useSkills } from '@/hooks/useSkills'
 import { useCV } from '@/hooks/useCV'
+import { supabase } from '@/lib/supabase'
 
 export default function Dashboard() {
   const { profile, signOut } = useAuth()
@@ -12,6 +13,17 @@ export default function Dashboard() {
   const [uploadStatus, setUploadStatus] = useState('')
   const [newSkillName, setNewSkillName] = useState('')
   const [skillLevel, setSkillLevel] = useState(3)
+  const [profileMessage, setProfileMessage] = useState('')
+  const [profileForm, setProfileForm] = useState({
+    first_name: '',
+    last_name: '',
+    degree_programme: '',
+    year_of_study: '',
+    bio: '',
+    linkedin_url: '',
+    github_url: '',
+    location_preference: ''
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { skills, loading: skillsLoading, addSkill, removeSkill, reload: reloadSkills } = useSkills()
@@ -19,6 +31,22 @@ export default function Dashboard() {
   const { cv, uploading, uploadCV, deleteCV } = useCV()
 
   const userName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'User'
+
+  // Initialize profile form when profile loads
+  useState(() => {
+    if (profile) {
+      setProfileForm({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        degree_programme: profile.degree_programme || '',
+        year_of_study: profile.year_of_study?.toString() || '',
+        bio: profile.bio || '',
+        linkedin_url: profile.linkedin_url || '',
+        github_url: profile.github_url || '',
+        location_preference: profile.location_preference || ''
+      })
+    }
+  })
 
   // Calculate stats
   const scores = Object.values(matchScores).map((m: any) => m.score)
@@ -69,6 +97,35 @@ export default function Dashboard() {
       await recalculateMatches()
     } catch (err) {
       alert('Failed to delete CV')
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      const updates = {
+        first_name: profileForm.first_name.trim(),
+        last_name: profileForm.last_name.trim(),
+        degree_programme: profileForm.degree_programme || null,
+        year_of_study: profileForm.year_of_study ? parseInt(profileForm.year_of_study) : null,
+        bio: profileForm.bio.trim() || null,
+        linkedin_url: profileForm.linkedin_url.trim() || null,
+        github_url: profileForm.github_url.trim() || null,
+        location_preference: profileForm.location_preference.trim() || null
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', profile?.id)
+
+      if (error) throw error
+
+      setProfileMessage('Profile saved successfully!')
+      setTimeout(() => setProfileMessage(''), 3000)
+      // Refresh the page to update profile data
+      window.location.reload()
+    } catch (err: any) {
+      setProfileMessage('Error saving profile: ' + err.message)
     }
   }
 
@@ -382,25 +439,124 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+
+            {/* Editable Profile Form */}
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-primary mb-1">Bio</label>
-                <p className="text-text-gray italic">{profile?.bio || 'No bio added yet'}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-primary mb-2">First Name</label>
+                  <input
+                    type="text"
+                    value={profileForm.first_name}
+                    onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })}
+                    placeholder="First"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-primary mb-2">Last Name</label>
+                  <input
+                    type="text"
+                    value={profileForm.last_name}
+                    onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })}
+                    placeholder="Last"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
               </div>
-              {profile?.location_preference && (
+
+              <div>
+                <label className="block text-sm font-semibold text-primary mb-2">Degree Programme</label>
+                <select
+                  value={profileForm.degree_programme}
+                  onChange={(e) => setProfileForm({ ...profileForm, degree_programme: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Not specified</option>
+                  <option>BSc Computer Science</option>
+                  <option>MEng Computer Science</option>
+                  <option>BSc Computer Science & Mathematics</option>
+                  <option>BSc Computer Science with Artificial Intelligence</option>
+                  <option>BSc Computer Science for Business</option>
+                  <option>BSc Software Engineering</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-primary mb-2">Year of Study</label>
+                <select
+                  value={profileForm.year_of_study}
+                  onChange={(e) => setProfileForm({ ...profileForm, year_of_study: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Not specified</option>
+                  <option value="1">Year 1</option>
+                  <option value="2">Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4 / Masters</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-primary mb-2">About Me</label>
+                <textarea
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                  placeholder="Brief intro — interests, goals, experience..."
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-vertical"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-primary mb-1">Location Preference</label>
-                  <p className="text-text-gray">{profile.location_preference}</p>
+                  <label className="block text-sm font-semibold text-primary mb-2">
+                    LinkedIn URL <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={profileForm.linkedin_url}
+                    onChange={(e) => setProfileForm({ ...profileForm, linkedin_url: e.target.value })}
+                    placeholder="https://linkedin.com/in/..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
-              )}
-              {profile?.linkedin_url && (
                 <div>
-                  <label className="block text-sm font-semibold text-primary mb-1">LinkedIn</label>
-                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline">
-                    {profile.linkedin_url}
-                  </a>
+                  <label className="block text-sm font-semibold text-primary mb-2">
+                    GitHub URL <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={profileForm.github_url}
+                    onChange={(e) => setProfileForm({ ...profileForm, github_url: e.target.value })}
+                    placeholder="https://github.com/..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
-              )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-primary mb-2">Preferred Location</label>
+                <input
+                  type="text"
+                  value={profileForm.location_preference}
+                  onChange={(e) => setProfileForm({ ...profileForm, location_preference: e.target.value })}
+                  placeholder="e.g. London, Remote, Anywhere..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div className="flex gap-3 items-center pt-2">
+                <Button onClick={handleSaveProfile}>Save Profile</Button>
+                {profileMessage && (
+                  <span className={`text-sm ${
+                    profileMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
+                  }`}>
+                    {profileMessage}
+                  </span>
+                )}
+              </div>
             </div>
           </Card>
         )}
