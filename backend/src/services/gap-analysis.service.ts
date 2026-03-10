@@ -2,53 +2,45 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// The LLM should ideally output a list of skills with no repeats, in lemmatized, lowercase form.
+// Extracts a deduplicated list of lowercase canonical skill names from arbitrary text.
 async function extractSkills(text: string): Promise<string[]> {
-  const prompt = `
-You are an expert at reading resumes and job descriptions.
-Given an arbitrary piece of text, extract every skill, technology,
-tool, technique or personal quality that could be relevant to an
-employer.  Normalize words by lemmatisation (e.g. "programming",
-"programmed" → "program") and output a JSON array of unique,
-lowercase strings.
-
-Examples:
-Text: "I built React.js apps with TypeScript and Node.  Familiar with
-MongoDB and agile methodologies."
-Output: ["react.js","typescript","node","mongodb","agile"]
-
-Text: "Skilled in programming, problem‑solving and communication."
-Output: ["program","problem solving","communication"]
-
-Now analyse this text:
-\"\"\"
-${text}
-\"\"\"
-Return only the JSON array.
-`;
-
   const resp = await openai.chat.completions.create({
     model: "gpt-4.1-mini",
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      {
+        role: "system",
+        content:
+          "You extract skills from text. " +
+          "Return a JSON array of unique, lowercase, canonical skill name strings — nothing else, no markdown fences. " +
+          "Normalise to canonical form (e.g. 'React.js' → 'react', 'Node.js' → 'node', 'C#' → 'csharp'). " +
+          "Include languages, frameworks, tools, cloud platforms, databases, and methodologies.",
+      },
+      {
+        role: "user",
+        content: text,
+      },
+    ],
     max_tokens: 500,
+    temperature: 0, // deterministic output makes JSON parsing reliable
   });
 
-  // the model may wrap the array in quotes or text; attempt to parse safely
-  let raw = resp.choices[0].message.content ?? "";
-  raw = raw.trim();
+  let raw = (resp.choices[0].message.content ?? "").trim();
+
+  // Strip accidental markdown fences the model sometimes adds
+  raw = raw.replace(/^```json?\s*/i, "").replace(/\s*```$/, "");
+
   try {
     return JSON.parse(raw);
-  } catch (err) {
-    // fall back to crude regex extraction
+  } catch {
+    // Fall back to extracting whatever array-like content is present
     const match = raw.match(/\[.*\]/s);
-    if (match) {
-      return JSON.parse(match[0]);
-    }
+    if (match) return JSON.parse(match[0]);
     throw new Error("failed to parse skills from model output: " + raw);
   }
 }
 
-// Apply skill extraction to both job description and CV, and compare the extracted skills to find gaps.
+// Compares CV text and job description text, returning the skills present in
+// the job description that are absent from the CV.
 export async function findGaps(
   cvText: string,
   jobText: string
@@ -58,30 +50,39 @@ export async function findGaps(
     extractSkills(jobText),
   ]);
 
-  const cvSet = new Set(cvSkills);
-  const missing = jobSkills.filter((s) => !cvSet.has(s));
+  // Case-insensitive comparison guards against minor normalisation inconsistencies
+  const cvSet = new Set(cvSkills.map(s => s.toLowerCase()));
+  const missing = jobSkills.filter(s => !cvSet.has(s.toLowerCase()));
 
   return { cvSkills, jobSkills, missing };
 }
 
-// This function takes the missing skills and wraps them up in a more verbose explanation via LLM.
+// Takes the list of missing skills and returns structured, actionable advice
+// with a learning resource for each skill.
 export async function describeGap(missing: string[]): Promise<string> {
   if (missing.length === 0) return "No gaps – the CV covers all required skills!";
+
+  const skillList = missing.map(s => `• ${s}`).join("\n");
 
   const resp = await openai.chat.completions.create({
     model: "gpt-4.1-mini",
     messages: [
       {
+        role: "system",
+        content:
+          "You are a career advisor helping Computer Science students prepare for industry placements. " +
+          "For each missing skill the student needs to develop, write one short sentence explaining why it matters " +
+          "for a placement role, then give the single best learning resource for it (name + URL). " +
+          "Use this format for each skill:\n\n" +
+          "**<skill name>**: <why it matters>. Learn it here: <Resource Name> – <URL>\n\n" +
+          "Be concise and specific. Do not add an introduction or conclusion.",
+      },
+      {
         role: "user",
-        content: `The candidate does not mention the following skills:\n\n${missing
-          .map((s) => "- " + s)
-          .join("\n")}\n\nWrite a single polite paragraph that a career advisor
-might send to the candidate explaining the missing skills. Do research if necessary and find the
-top resources on the internet for it. For example, The Odin Project for web development, Ruby,
-and Javascript. In this manner list every missing skill and provide at least one resource (with a link)
-to acquire that skill.`,
+        content: `The student is missing the following skills:\n\n${skillList}`,
       },
     ],
+    temperature: 0.3,
   });
 
   return resp.choices[0].message.content ?? "";
