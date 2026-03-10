@@ -1,9 +1,3 @@
-/*import { … } from "../../../shared/types/…";
-import { querySomething } from "../database/queries";
-import { SomeDbType } from "../database/types";
-import { calculateGap } from "../services/gap-analysis.service";*/
-
-import { Request, Response } from "express";
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -33,14 +27,14 @@ ${text}
 Return only the JSON array.
 `;
 
-  const resp = await openai.responses.create({
+  const resp = await openai.chat.completions.create({
     model: "gpt-4.1-mini",
-    input: prompt,
-    max_output_tokens: 500,
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 500,
   });
 
   // the model may wrap the array in quotes or text; attempt to parse safely
-  let raw = resp.output_text || "";
+  let raw = resp.choices[0].message.content ?? "";
   raw = raw.trim();
   try {
     return JSON.parse(raw);
@@ -73,15 +67,22 @@ export async function findGaps(
 // This function takes the missing skills and wraps them up in a more verbose explanation via LLM.
 export async function describeGap(missing: string[]): Promise<string> {
   if (missing.length === 0) return "No gaps – the CV covers all required skills!";
-  const resp = await openai.responses.create({
+
+  const resp = await openai.chat.completions.create({
     model: "gpt-4.1-mini",
-    input: `The candidate does not mention the following skills:\n\n${missing
-      .map((s) => "- " + s)
-      .join("\n")}\n\nWrite a single polite paragraph that a career advisor
-might send to the candidate explaining the missing skills. Do research if necessary and find the 
-top resources on the internet for it. For example, The Odin Project for web development, Ruby, 
+    messages: [
+      {
+        role: "user",
+        content: `The candidate does not mention the following skills:\n\n${missing
+          .map((s) => "- " + s)
+          .join("\n")}\n\nWrite a single polite paragraph that a career advisor
+might send to the candidate explaining the missing skills. Do research if necessary and find the
+top resources on the internet for it. For example, The Odin Project for web development, Ruby,
 and Javascript. In this manner list every missing skill and provide at least one resource (with a link)
 to acquire that skill.`,
+      },
+    ],
   });
-  return resp.output_text;
+
+  return resp.choices[0].message.content ?? "";
 }

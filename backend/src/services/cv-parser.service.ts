@@ -1,6 +1,8 @@
 import fs from "fs";
-// pdf-parse has broken typings; import via require and cast to any so we can call it
-const pdfParse: any = require("pdf-parse");
+// pdf-parse ships without proper TS types; cast via import so vitest can mock it cleanly.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import pdfParseLib from "pdf-parse";
+const pdfParse = pdfParseLib as unknown as (buf: Buffer) => Promise<{ text: string }>;
 import mammoth from "mammoth";
 import nlp from "compromise";
 
@@ -21,20 +23,21 @@ export async function extractTextFromFile(path: string): Promise<string> {
 
 // Simple text anonymizer, completely local
 export function anonymize(text: string): string {
-  const doc = nlp(text);
+  // Run regex replacements first — numeric patterns like SSNs would otherwise be
+  // mis-tagged as dates by compromise before we get a chance to replace them.
+  const preProcessed = text
+    .replace(/\b\d{3}[-.\s]?\d{2}[-.\s]?\d{4}\b/g, "<SSN>")
+    .replace(/\b\d{10,}\b/g, "<PHONE>")
+    .replace(/https?:\/\/\S+/gi, "<URL>");
 
-  // replace named entities recognised by compromise
+  // Then let compromise handle named entity recognition.
+  const doc = nlp(preProcessed);
   doc.match("#Person").replaceWith("<PERSON>");
   doc.match("#Date").replaceWith("<DATE>");
   doc.match("#Place").replaceWith("<PLACE>");
   doc.match("#Email").replaceWith("<EMAIL>");
 
-  // things the tagger doesn’t catch (probably won't work very well)
-  return doc
-    .text()
-    .replace(/\b\d{3}[-.\s]?\d{2}[-.\s]?\d{4}\b/g, "<SSN>")
-    .replace(/\b\d{10,}\b/g, "<PHONE>")
-    .replace(/https?:\/\/\S+/gi, "<URL>");
+  return doc.text();
 }
 
 export async function parseCv(filePath: string): Promise<string> {
