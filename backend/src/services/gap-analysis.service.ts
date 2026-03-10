@@ -5,7 +5,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // Extracts a deduplicated list of lowercase canonical skill names from arbitrary text.
 async function extractSkills(text: string): Promise<string[]> {
   const resp = await openai.chat.completions.create({
-    model: "gpt-4.1-mini",
+    model: "gpt-4o-mini",
     messages: [
       {
         role: "system",
@@ -65,7 +65,7 @@ export async function describeGap(missing: string[]): Promise<string> {
   const skillList = missing.map(s => `• ${s}`).join("\n");
 
   const resp = await openai.chat.completions.create({
-    model: "gpt-4.1-mini",
+    model: "gpt-4o-mini",
     messages: [
       {
         role: "system",
