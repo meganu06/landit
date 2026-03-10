@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { supabase } from '../supabase/client';
 import { AuthRequest } from '../middleware/auth';
 import OpenAI from 'openai';
-import { anonymize } from '../services/cv-parser.service';
+import { anonymize } from '../services/anonymizer.service';
 
 function getOpenAI() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

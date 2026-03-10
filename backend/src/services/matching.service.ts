@@ -1,9 +1,8 @@
 import { supabase } from '../supabase/client';
-import { anonymize } from './cv-parser.service';
+import { anonymize } from './anonymizer.service';
 import { findGaps, describeGap } from './gap-analysis.service';
 
-// Only run gap analysis on the top N placements above a minimum score,
-// to keep OpenAI costs proportional.
+// Only run gap analysis on the top N placements above a minimum score for efficient OpenAI use.
 const GAP_ANALYSIS_MIN_SCORE = 30;
 const GAP_ANALYSIS_MAX_PLACEMENTS = 5;
 
@@ -32,7 +31,7 @@ function calculateMatchScore(
 }
 
 export async function runMatchingForUser(userId: string, rawCvText?: string): Promise<void> {
-  // Anonymize CV text once here — this is the only place it touches LLMs.
+  // Anonymize CV text before handing off to LLMs.
   const cvText = rawCvText ? anonymize(rawCvText) : undefined;
 
   // Get user's skills from the student_skills → skills join
