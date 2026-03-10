@@ -3,7 +3,7 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Extracts a deduplicated list of lowercase canonical skill names from arbitrary text.
-async function extractSkills(text: string): Promise<string[]> {
+async function extractSkillNames(text: string): Promise<string[]> {
   const resp = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -46,8 +46,8 @@ export async function findGaps(
   jobText: string
 ): Promise<{ cvSkills: string[]; jobSkills: string[]; missing: string[] }> {
   const [cvSkills, jobSkills] = await Promise.all([
-    extractSkills(cvText),
-    extractSkills(jobText),
+    extractSkillNames(cvText),
+    extractSkillNames(jobText),
   ]);
 
   // Case-insensitive comparison guards against minor normalisation inconsistencies
