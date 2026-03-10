@@ -5,6 +5,7 @@ import pdfParseLib from "pdf-parse";
 const pdfParse = pdfParseLib as unknown as (buf: Buffer) => Promise<{ text: string }>;
 import mammoth from "mammoth";
 import nlp from "compromise";
+import { parse } from "path";
 
 // Extract text from a CV file, supporting both PDF and DOCX formats.
 export async function extractTextFromFile(path: string): Promise<string> {
@@ -44,3 +45,5 @@ export async function parseCv(filePath: string): Promise<string> {
   const raw = await extractTextFromFile(filePath);
   return anonymize(raw);
 }
+
+console.log(parseCv("/Users/jishnu/Documents/Work/JishnuSingha1.pdf"));
