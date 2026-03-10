@@ -1,6 +1,5 @@
 import { supabase } from '../supabase/client';
-import { anonymize } from './anonymizer.service';
-import { findGaps, describeGap } from './gap-analysis.service';
+import { describeGap } from './gap-analysis.service';
 
 // Only run gap analysis on the top N placements above a minimum score for efficient OpenAI use.
 const GAP_ANALYSIS_MIN_SCORE = 30;
@@ -30,10 +29,7 @@ function calculateMatchScore(
   return { score, matched, missing };
 }
 
-export async function runMatchingForUser(userId: string, rawCvText?: string): Promise<void> {
-  // Anonymize CV text before handing off to LLMs.
-  const cvText = rawCvText ? anonymize(rawCvText) : undefined;
-
+export async function runMatchingForUser(userId: string): Promise<void> {
   // Get user's skills from the student_skills → skills join
   const { data: skillRows, error: skillError } = await supabase
     .from('student_skills')
@@ -49,17 +45,16 @@ export async function runMatchingForUser(userId: string, rawCvText?: string): Pr
     })
     .filter((n): n is string => Boolean(n));
 
-  // Fetch all active placements with skills and description
+  // Fetch all active placements with their skills
   const { data: placements, error: placementError } = await supabase
     .from('placements')
-    .select('id, description, placement_skills(importance, skills(name))')
+    .select('id, placement_skills(importance, skills(name))')
     .eq('is_active', true);
 
   if (placementError) throw new Error(placementError.message);
 
   type PlacementRow = {
     id: string;
-    description: string | null;
     placement_skills: { importance: string; skills: { name: string } | null }[];
   };
 
@@ -80,8 +75,6 @@ export async function runMatchingForUser(userId: string, rawCvText?: string): Pr
       user_id: userId,
       placement_id: p.id,
       fit_score: score,
-      // description kept alongside for gap analysis below, removed before DB insert
-      _description: p.description ?? '',
       gap_analysis_report: {
         skills_matched: matched,
         skills_missing: missing,
@@ -99,46 +92,20 @@ export async function runMatchingForUser(userId: string, rawCvText?: string): Pr
   if (topForGap.length > 0) {
     const adviceResults = await Promise.allSettled(
       topForGap.map(async r => {
-        let gapMissing: string[] = r.gap_analysis_report.skills_missing;
-
-        if (cvText && r._description) {
-          // Full LLM-based comparison: finds skill gaps from natural language text,
-          // which catches skills not explicitly tagged in placement_skills.
-          try {
-            const gaps = await findGaps(cvText, r._description);
-            gapMissing = gaps.missing;
-          } catch {
-            // fall back to DB-derived missing skills if LLM call fails
-          }
-        }
-
-        const advice = await describeGap(gapMissing);
-        return { placement_id: r.placement_id, gapMissing, advice };
+        const advice = await describeGap(r.gap_analysis_report.skills_missing);
+        return { placement_id: r.placement_id, advice };
       })
     );
 
-    // Merge advice back into the inserts array
-    const enrichedMap = new Map<string, { gapMissing: string[]; advice: string }>();
     for (const result of adviceResults) {
       if (result.status === 'fulfilled') {
-        enrichedMap.set(result.value.placement_id, {
-          gapMissing: result.value.gapMissing,
-          advice: result.value.advice,
-        });
-      }
-    }
-
-    for (const ins of inserts) {
-      const enriched = enrichedMap.get(ins.placement_id);
-      if (enriched) {
-        ins.gap_analysis_report.skills_missing = enriched.gapMissing;
-        ins.gap_analysis_report.advice = enriched.advice;
+        const ins = inserts.find(i => i.placement_id === result.value.placement_id);
+        if (ins) ins.gap_analysis_report.advice = result.value.advice;
       }
     }
   }
 
-  // Strip the temporary _description field before inserting into DB
-  const dbInserts = inserts.map(({ _description: _d, ...rest }) => rest);
+  const dbInserts = inserts;
 
   await supabase.from('match_results').delete().eq('user_id', userId);
   if (dbInserts.length === 0) return;

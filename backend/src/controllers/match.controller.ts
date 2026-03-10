@@ -5,13 +5,7 @@ import { runMatchingForUser } from '../services/matching.service';
 
 export async function runMatching(req: AuthRequest, res: Response): Promise<void> {
   try {
-    // cvText is optional — if the frontend passes it, gap analysis will use it
-    // for a richer LLM-based comparison against each placement's job description.
-    const cvText: string | undefined = typeof req.body?.cvText === 'string'
-      ? req.body.cvText
-      : undefined;
-
-    await runMatchingForUser(req.user!.id, cvText);
+    await runMatchingForUser(req.user!.id);
     res.json({ message: 'Matching complete' });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
