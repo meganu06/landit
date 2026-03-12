@@ -469,12 +469,12 @@
     </header>
 
     <nav class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('overview', this)">Overview</button>
-        <button class="tab-btn" onclick="switchTab('placements', this)">Placements</button>
-        <button class="tab-btn" onclick="switchTab('skills', this)">My Skills</button>
-        <button class="tab-btn" onclick="switchTab('cv', this)">CV</button>
-        <button class="tab-btn" onclick="switchTab('bookmarks', this)">Bookmarks</button>
-        <button class="tab-btn" onclick="switchTab('profile', this)">Profile</button>
+        <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+        <button class="tab-btn" onclick="switchTab('placements')">Placements</button>
+        <button class="tab-btn" onclick="switchTab('skills')">My Skills</button>
+        <button class="tab-btn" onclick="switchTab('cv')">CV</button>
+        <button class="tab-btn" onclick="switchTab('bookmarks')">Bookmarks</button>
+        <button class="tab-btn" onclick="switchTab('profile')">Profile</button>
     </nav>
 
     <div class="content">
@@ -723,10 +723,6 @@
         <div class="form-group">
             <label>Description</label>
             <textarea id="p-description" placeholder="Role overview, responsibilities..."></textarea>
-            <div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="extractSkillsInModal()">Extract Skills from Description</button>
-                <span id="p-skills-status" style="font-size:0.8rem;color:#6b7280;"></span>
-            </div>
         </div>
         <div class="placement-form-grid">
             <div class="form-group">
@@ -747,6 +743,14 @@
                 <label>Application Link (optional)</label>
                 <input type="url" id="p-link" placeholder="https://...">
             </div>
+        </div>
+        <div class="form-group">
+            <label>Required Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+            <input type="text" id="p-required-skills" placeholder="Python, SQL, React...">
+        </div>
+        <div class="form-group">
+            <label>Preferred Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+            <input type="text" id="p-preferred-skills" placeholder="Docker, AWS, TypeScript...">
         </div>
         <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
             <button class="btn btn-secondary" onclick="closePlacementModal()">Cancel</button>
@@ -770,22 +774,6 @@
             <button class="btn btn-primary" onclick="saveCompany()">Save Company</button>
         </div>
         <div id="company-modal-msg" style="margin-top:0.75rem;"></div>
-    </div>
-</div>
-
-<!-- ── SKILLS VIEWER MODAL ─────────────────────────────────────────────── -->
-<div class="modal-overlay" id="skills-viewer-modal">
-    <div class="modal" style="max-width:500px;">
-        <button class="modal-close" onclick="document.getElementById('skills-viewer-modal').classList.remove('open')">×</button>
-        <h2 id="skills-viewer-title">Skills</h2>
-        <div style="margin-bottom:1.25rem;">
-            <div style="font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.5rem;">REQUIRED</div>
-            <div id="skills-viewer-required" style="display:flex;flex-wrap:wrap;gap:0.3rem;"></div>
-        </div>
-        <div>
-            <div style="font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.5rem;">PREFERRED</div>
-            <div id="skills-viewer-preferred" style="display:flex;flex-wrap:wrap;gap:0.3rem;"></div>
-        </div>
     </div>
 </div>
 
@@ -965,11 +953,11 @@ async function showDashboard() {
 }
 
 // ── TAB SWITCHING ─────────────────────────────────────────────────────
-function switchTab(tab, btn) {
+function switchTab(tab) {
     document.querySelectorAll('#dashboard .tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('#dashboard .tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`tab-${tab}`).classList.add('active');
-    btn.classList.add('active');
+    event.target.classList.add('active');
 }
 
 function switchStaffTab(tab, btn) {
@@ -1623,31 +1611,20 @@ async function loadStaffCompanies() {
     `).join('');
 }
 
-let staffPlacementsData = [];
-
 async function loadStaffPlacements() {
     const { data } = await sb
         .from('placements')
-        .select('*, companies(name), placement_skills(importance, skills(name))')
+        .select('*, companies(name)')
         .order('created_at', { ascending: false });
 
-    staffPlacementsData = data || [];
     const tbody = document.getElementById('staff-placements-body');
-    if (!staffPlacementsData.length) {
+    if (!data || data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9ca3af;">No placements yet. Add one to get started.</td></tr>';
         return;
     }
-    tbody.innerHTML = staffPlacementsData.map(p => {
-        const skills = p.placement_skills || [];
-        const skillsBtn = skills.length > 0
-            ? `<button class="btn btn-secondary btn-sm" style="margin-top:0.3rem;" onclick="viewPlacementSkills('${p.id}')">${skills.length} skill${skills.length !== 1 ? 's' : ''}</button>`
-            : `<button class="btn btn-primary btn-sm" style="margin-top:0.3rem;" onclick="extractPlacementSkills('${p.id}')">Extract Skills</button>`;
-        return `
+    tbody.innerHTML = data.map(p => `
         <tr>
-            <td>
-                <div style="font-weight:600;">${p.title || '—'}</div>
-                ${skillsBtn}
-            </td>
+            <td style="font-weight:600;">${p.title || '—'}</td>
             <td>${p.companies?.name || '—'}</td>
             <td>${p.location || '—'}</td>
             <td>${p.deadline ? new Date(p.deadline).toLocaleDateString() : '—'}</td>
@@ -1656,34 +1633,17 @@ async function loadStaffPlacements() {
                 <button class="btn btn-secondary btn-sm" onclick="openPlacementModal('${p.id}')">Edit</button>
                 <button class="btn btn-danger btn-sm" style="margin-left:0.4rem;" onclick="togglePlacementActive('${p.id}', ${p.is_active})">${p.is_active ? 'Deactivate' : 'Activate'}</button>
             </td>
-        </tr>`;
-    }).join('');
-}
-
-function viewPlacementSkills(placementId) {
-    const p = staffPlacementsData.find(x => x.id === placementId);
-    if (!p) return;
-    const skills = p.placement_skills || [];
-    const required  = skills.filter(s => s.importance === 'required');
-    const preferred = skills.filter(s => s.importance !== 'required');
-
-    const renderBadges = (list, cls) =>
-        list.length ? list.map(s => `<span class="badge ${cls}" style="margin:0.2rem;">${s.skills?.name || ''}</span>`).join('') : '<span style="color:#9ca3af;font-size:0.85rem;">None</span>';
-
-    document.getElementById('skills-viewer-title').textContent = `Skills — ${p.title}`;
-    document.getElementById('skills-viewer-required').innerHTML  = renderBadges(required,  'badge-blue');
-    document.getElementById('skills-viewer-preferred').innerHTML = renderBadges(preferred, 'badge-gray');
-    document.getElementById('skills-viewer-modal').classList.add('open');
+        </tr>
+    `).join('');
 }
 
 function openPlacementModal(placementId = null) {
     editingPlacementId = placementId;
     document.getElementById('placement-modal-title').textContent = placementId ? 'Edit Placement' : 'Add Placement';
     document.getElementById('placement-modal-msg').innerHTML = '';
-    document.getElementById('p-skills-status').textContent = '';
 
     // Clear form
-    ['p-title','p-description','p-location','p-salary','p-deadline','p-link']
+    ['p-title','p-description','p-location','p-salary','p-deadline','p-link','p-required-skills','p-preferred-skills']
         .forEach(id => document.getElementById(id).value = '');
     document.getElementById('p-company').value = '';
 
@@ -1694,7 +1654,7 @@ function openPlacementModal(placementId = null) {
 async function loadPlacementForEdit(id) {
     const { data } = await sb
         .from('placements')
-        .select('*, placement_skills(importance, skills(name, category))')
+        .select('*, placement_skills(importance, skills(name))')
         .eq('id', id)
         .single();
     if (!data) return;
@@ -1707,12 +1667,10 @@ async function loadPlacementForEdit(id) {
     document.getElementById('p-deadline').value    = data.deadline?.slice(0, 10) || '';
     document.getElementById('p-link').value        = data.application_link || '';
 
-    const existing = data.placement_skills || [];
-    if (existing.length > 0) {
-        const req  = existing.filter(ps => ps.importance === 'required').length;
-        const pref = existing.filter(ps => ps.importance !== 'required').length;
-        document.getElementById('p-skills-status').textContent = `${existing.length} skills already extracted (${req} required, ${pref} preferred)`;
-    }
+    const req  = (data.placement_skills || []).filter(ps => ps.importance === 'required').map(ps => ps.skills?.name).filter(Boolean).join(', ');
+    const pref = (data.placement_skills || []).filter(ps => ps.importance !== 'required').map(ps => ps.skills?.name).filter(Boolean).join(', ');
+    document.getElementById('p-required-skills').value  = req;
+    document.getElementById('p-preferred-skills').value = pref;
 }
 
 function closePlacementModal() {
@@ -1752,98 +1710,30 @@ async function savePlacement() {
         placementId = data.id;
     }
 
+    await savePlacementSkills(placementId);
     closePlacementModal();
     loadStaffPlacements();
 }
 
-async function extractSkillsInModal() {
-    const msgEl = document.getElementById('placement-modal-msg');
-    const description = document.getElementById('p-description').value.trim();
-    const companyId   = document.getElementById('p-company').value;
-    const title       = document.getElementById('p-title').value.trim();
-    const location    = document.getElementById('p-location').value.trim();
+async function savePlacementSkills(placementId) {
+    const requiredNames  = document.getElementById('p-required-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+    const preferredNames = document.getElementById('p-preferred-skills').value.split(',').map(s => s.trim()).filter(Boolean);
 
-    if (!description) { showMsg(msgEl, 'Enter a description first.', 'error'); return; }
+    await sb.from('placement_skills').delete().eq('placement_id', placementId);
 
-    let placementId = editingPlacementId;
+    const all = [
+        ...requiredNames.map(name => ({ name, importance: 'required' })),
+        ...preferredNames.map(name => ({ name, importance: 'preferred' })),
+    ];
 
-    // For new placements, save first to get an ID
-    if (!placementId) {
-        if (!companyId || !title || !location) {
-            showMsg(msgEl, 'Fill in company, title, and location before extracting skills.', 'error'); return;
+    for (const { name, importance } of all) {
+        const { data: existing } = await sb.from('skills').select('id').ilike('name', name).limit(1).maybeSingle();
+        let skillId = existing?.id;
+        if (!skillId) {
+            const { data: created } = await sb.from('skills').insert({ name, category: 'technical' }).select('id').single();
+            skillId = created?.id;
         }
-        const payload = {
-            company_id: companyId, title, description, location,
-            salary_range:     document.getElementById('p-salary').value ? parseFloat(document.getElementById('p-salary').value) : null,
-            deadline:         document.getElementById('p-deadline').value || null,
-            application_link: document.getElementById('p-link').value.trim() || null,
-            is_active: true,
-        };
-        const { data, error } = await sb.from('placements').insert(payload).select().single();
-        if (error) { showMsg(msgEl, 'Could not save placement: ' + error.message, 'error'); return; }
-        placementId = data.id;
-        editingPlacementId = placementId;
-    }
-
-    const statusEl = document.getElementById('p-skills-status');
-    statusEl.textContent = 'Extracting…';
-
-    const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch('http://localhost:3001/api/placements/extract-skills', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ description, placementId }),
-    });
-
-    const json = await res.json();
-    if (!res.ok) {
-        statusEl.textContent = '';
-        showMsg(msgEl, `Extraction failed: ${json.error || 'Unknown error'}`, 'error'); return;
-    }
-
-    const skills = json.skills || [];
-    const req  = skills.filter(s => s.importance === 'required').length;
-    const pref = skills.filter(s => s.importance !== 'required').length;
-    statusEl.textContent = `${skills.length} skills extracted (${req} required, ${pref} preferred)`;
-    showMsg(msgEl, 'Skills extracted and saved!', 'success');
-    loadStaffPlacements();
-}
-
-async function extractPlacementSkills(placementId) {
-    const p = staffPlacementsData.find(x => x.id === placementId);
-    if (!p) return;
-
-    if (!p.description) {
-        alert('This placement has no description — add one first by editing the placement.');
-        return;
-    }
-
-    const btn = document.querySelector(`button[onclick="extractPlacementSkills('${placementId}')"]`);
-    if (btn) { btn.disabled = true; btn.textContent = 'Extracting…'; }
-
-    const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch('http://localhost:3001/api/placements/extract-skills', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ description: p.description, placementId }),
-    });
-
-    const json = await res.json();
-
-    if (!res.ok) {
-        alert(`Extraction failed: ${json.error || 'Unknown error'}`);
-        if (btn) { btn.disabled = false; btn.textContent = 'Extract Skills'; }
-        return;
-    }
-
-    await loadStaffPlacements();
-
-    const skills = json.skills || [];
-    if (skills.length > 0) {
-        viewPlacementSkills(placementId);
+        if (skillId) await sb.from('placement_skills').insert({ placement_id: placementId, skill_id: skillId, importance });
     }
 }
 
@@ -1911,10 +1801,6 @@ function openModal(mode) {
     document.getElementById('signup-step-1').style.display = 'block';
     document.getElementById('signup-step-2').style.display = 'none';
     document.getElementById('step-dot-2').style.background = '#e5e7eb';
-    // Sync step-2 fields and title with pendingRole
-    const isStaff = pendingRole === 'admin';
-    document.getElementById('signup-form-title').textContent = isStaff ? 'Create Staff Account' : 'Create Account';
-    document.getElementById('signup-step2-student-fields').style.display = isStaff ? 'none' : 'block';
 }
 function closeModal() { document.getElementById('auth-modal').classList.remove('open'); }
 document.getElementById('auth-modal').addEventListener('click', e => {
