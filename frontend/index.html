@@ -892,7 +892,9 @@ const sb = window.supabase.createClient(
 let currentUser = null;
 let userSkills = [];      // [{skill_name, proficiency_level, id, skills:{name}}]
 let allPlacements = [];   // placements with companies + placement_skills
-let matchScores = {};     // placement_id → score
+
+let matchScores = {};     // placement_id → { score, matched, missing, advice }
+let lastExtractedCvText = '';  // CV text from the most recent upload, passed to backend for gap analysis
 let pendingRole = 'student'; // set when user picks a role on landing
 
 function selectRole(role) {
@@ -903,6 +905,7 @@ function selectRole(role) {
     document.getElementById('signup-step2-student-fields').style.display = isStaff ? 'none' : 'block';
     openModal('signup');
 }
+
 
 // ── AUTH STATE ────────────────────────────────────────────────────────
 sb.auth.onAuthStateChange((event, session) => {
@@ -1122,23 +1125,47 @@ function calculateScore(placement) {
 async function runMatching() {
     if (!allPlacements.length) return;
 
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+
     matchScores = {};
-    const inserts = [];
 
-    allPlacements.forEach(p => {
-        const { score, matched, missing } = calculateScore(p);
-        matchScores[p.id] = { score, matched, missing };
-        inserts.push({
-            user_id: currentUser.id,
-            placement_id: p.id,
-            fit_score: score,
-            gap_analysis_report: { skills_matched: matched, skills_missing: missing },
+    // Call the backend — it runs matching + gap analysis server-side.
+    // If we have CV text from a recent upload, pass it so gap analysis
+    // can do a full LLM comparison against each job description.
+    try {
+        const body = lastExtractedCvText ? { cvText: lastExtractedCvText } : {};
+        await fetch('http://localhost:3001/api/match/run', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify(body),
         });
-    });
+    } catch (err) {
+        console.error('Matching API call failed:', err);
+    }
 
-    // Replace match results for this user
-    await sb.from('match_results').delete().eq('user_id', currentUser.id);
-    if (inserts.length) await sb.from('match_results').insert(inserts);
+    // Fetch the results the backend just computed (scores + gap analysis advice)
+    try {
+        const res = await fetch('http://localhost:3001/api/match/results', {
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+        });
+        const results = await res.json();
+
+        for (const r of results) {
+            const report = r.gap_analysis_report || {};
+            matchScores[r.placement_id] = {
+                score: r.fit_score,
+                matched: report.skills_matched || [],
+                missing: report.skills_missing || [],
+                advice: report.advice || null,
+            };
+        }
+    } catch (err) {
+        console.error('Failed to fetch match results:', err);
+    }
 
     // Update stats
     const scores = Object.values(matchScores).map(m => m.score);
@@ -1197,6 +1224,11 @@ function renderPlacementCard(p, opts = {}) {
         <div class="placement-skills" style="margin-top:0.5rem;">
             ${matchedTags}${missingTags}
         </div>` : ''}
+        ${match.advice ? `
+        <details class="gap-advice" style="margin-top:0.5rem;">
+            <summary style="font-size:0.8rem;font-weight:600;color:#4f46e5;cursor:pointer;">📘 Gap Analysis Advice</summary>
+            <div style="font-size:0.8rem;color:#374151;margin-top:0.4rem;line-height:1.5;white-space:pre-line;">${match.advice}</div>
+        </details>` : ''}
         <div class="placement-actions">
             ${p.application_link ? `<a href="${p.application_link}" target="_blank" class="btn btn-primary btn-sm">Apply</a>` : p.companies?.website_url ? `<a href="${p.companies.website_url}" target="_blank" class="btn btn-primary btn-sm">Apply</a>` : ''}
             <button class="btn btn-secondary btn-sm" onclick="toggleBookmark('${p.id}', this)" id="bm-${p.id}">
@@ -1365,6 +1397,7 @@ async function uploadCV(file) {
     if (dbErr) { showMsg(msgEl, 'Saved file but DB error: ' + dbErr.message, 'error'); return; }
 
     if (extractedText) {
+        lastExtractedCvText = extractedText;
         await extractAndSaveSkills(extractedText, msgEl);
     } else {
         showMsg(msgEl, 'CV uploaded. Could not extract text — add skills manually.', 'success');

@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { supabase } from '../supabase/client';
 import { AuthRequest } from '../middleware/auth';
 import OpenAI from 'openai';
+import { anonymize } from '../services/anonymizer.service';
 
 function getOpenAI() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -69,7 +70,10 @@ export async function extractSkills(req: AuthRequest, res: Response): Promise<vo
     return;
   }
 
-  // Ask GPT to extract skills from the raw CV text
+  // Anonymize before any LLM sees the text
+  const cleanText = anonymize(text);
+
+  // Ask GPT to extract skills from the anonymized CV text
   let extractedNames: string[] = [];
   try {
     const completion = await getOpenAI().chat.completions.create({
@@ -83,7 +87,7 @@ export async function extractSkills(req: AuthRequest, res: Response): Promise<vo
             'Rules: be specific (e.g. "React" not "web development"), normalise capitalisation (e.g. "JavaScript", "AWS", "PostgreSQL"), ' +
             'include languages, frameworks, tools, cloud platforms, databases, and methodologies, remove duplicates, max 50 skills.',
         },
-        { role: 'user', content: text.slice(0, 12000) },
+        { role: 'user', content: cleanText.slice(0, 12000) },
       ],
       temperature: 0,
     });

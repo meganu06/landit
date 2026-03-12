@@ -5,7 +5,11 @@ import { runMatchingForUser } from '../services/matching.service';
 
 export async function runMatching(req: AuthRequest, res: Response): Promise<void> {
   try {
-    await runMatchingForUser(req.user!.id);
+    const cvText: string | undefined = typeof req.body?.cvText === 'string'
+      ? req.body.cvText
+      : undefined;
+
+    await runMatchingForUser(req.user!.id, cvText);
     res.json({ message: 'Matching complete' });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
