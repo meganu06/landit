@@ -94,7 +94,7 @@ const { id } = req.params;
 
 const { error } = await supabase
 .from('placements')
-.update({ active: false, updated_at: new Date().toISOString() })
+.delete()
 .eq('id', id);
 
 if (error) {
@@ -102,14 +102,14 @@ res.status(500).json({ error: error.message });
 return;
 }
 
-res.json({ message: 'Placement deactivated' });
+res.json({ message: 'Placement deleted' });
 }
 
 export async function extractPlacementSkills(req: AuthRequest, res: Response): Promise<void> {
 const { description, placementId } = req.body;
 
-if (!description || !placementId) {
-res.status(400).json({ error: 'description and placementId are required' });
+if (!description) {
+res.status(400).json({ error: 'description is required' });
 return;
 }
 
@@ -146,6 +146,12 @@ return;
 
 if (extracted.length === 0) {
 res.json({ skills: [] });
+return;
+}
+
+// If no placementId, just return the extracted skills without persisting
+if (!placementId) {
+res.json({ skills: extracted });
 return;
 }
 
@@ -186,4 +192,48 @@ saved.push({ name: trimmed, importance });
 }
 
 res.json({ skills: saved });
+}
+
+export async function savePlacementSkillsList(req: AuthRequest, res: Response): Promise<void> {
+const { id: placementId } = req.params;
+const { required = [], preferred = [] } = req.body;
+
+const all: { name: string; importance: 'required' | 'preferred' }[] = [
+...required.map((name: string) => ({ name, importance: 'required' as const })),
+...preferred.map((name: string) => ({ name, importance: 'preferred' as const })),
+];
+
+await supabase.from('placement_skills').delete().eq('placement_id', placementId);
+
+for (const { name, importance } of all) {
+const trimmed = name.trim();
+if (!trimmed) continue;
+
+const { data: existing } = await supabase
+.from('skills')
+.select('id')
+.ilike('name', trimmed)
+.limit(1)
+.maybeSingle();
+
+let skillId = existing?.id;
+if (!skillId) {
+const { data: created } = await supabase
+.from('skills')
+.insert({ name: trimmed, category: 'technical' })
+.select('id')
+.single();
+skillId = created?.id;
+}
+
+if (skillId) {
+await supabase.from('placement_skills').insert({
+placement_id: placementId,
+skill_id: skillId,
+importance,
+});
+}
+}
+
+res.json({ ok: true });
 }
