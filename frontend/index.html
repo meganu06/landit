@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>LandIt — Placement Matching</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
@@ -14,14 +14,15 @@
 <!-- ── LANDING (unauthenticated) ─────────────────────────────────────── -->
 <div id="landing">
 <div class="landing-card">
-<h1>LandIt</h1>
+<img src="images/logo.png" alt="LandIt" class="landing-logo">
+<h1 class="brand-name">LandIt</h1>
 <p>Your AI-powered placement companion. Upload your CV, get matched to placements, and track your skill gaps.</p>
 <div class="landing-features">
 <div class="feature-chip"><span class="icon">🎯</span>Smart Matching</div>
 <div class="feature-chip"><span class="icon">📄</span>CV Analysis</div>
 <div class="feature-chip"><span class="icon">🚀</span>Skill Gaps</div>
 </div>
-<p style="font-size:0.85rem;color:#9ca3af;margin-bottom:0.75rem;">I am a...</p>
+<p style="font-size:0.85rem;color:var(--text-light);margin-bottom:0.75rem;">I am a...</p>
 <div class="landing-roles">
 <div class="role-card" onclick="selectRole('student')">
 <div class="role-icon">🎓</div>
@@ -42,7 +43,10 @@
 <!-- ── DASHBOARD (authenticated) ─────────────────────────────────────── -->
 <div id="dashboard">
 <header class="navbar">
-<div class="navbar-brand">🎯 LandIt</div>
+<div class="navbar-brand">
+<img src="images/logo.png" alt="LandIt" class="navbar-logo">
+<span class="navbar-brand-text">LandIt</span>
+</div>
 <span class="navbar-user" id="navbar-welcome"></span>
 <div class="navbar-actions">
 <button id="btn-signout">Sign Out</button>
@@ -87,7 +91,7 @@
 <div id="tab-placements" class="tab-panel">
 <div class="section-header">
 <h2>All Placements</h2>
-<span id="placements-count" style="color:#9ca3af;font-size:0.85rem;"></span>
+<span id="placements-count" style="color:var(--text-light);font-size:0.85rem;"></span>
 </div>
 <div id="placements-list"><div class="loading">Loading placements...</div></div>
 </div>
@@ -95,12 +99,12 @@
 <div id="tab-skills" class="tab-panel">
 <div class="card">
 <div class="card-title">Your Skills</div>
-<p style="color:#6b7280;font-size:0.875rem;margin-bottom:1rem;">Skills are automatically extracted when you upload your CV. You can also add them manually below.</p>
+<p style="color:var(--text-light);font-size:0.875rem;margin-bottom:1rem;">Skills are automatically extracted when you upload your CV. You can also add them manually below.</p>
 <div class="skills-grid" id="skills-grid">
 <div class="loading">Loading skills...</div>
 </div>
 <details style="margin-top:1.25rem;">
-<summary style="cursor:pointer;font-weight:600;font-size:0.9rem;color:#2563eb;list-style:none;display:flex;align-items:center;gap:0.4rem;">
+<summary style="cursor:pointer;font-weight:600;font-size:0.9rem;color:var(--green-dark);list-style:none;display:flex;align-items:center;gap:0.4rem;">
 &#43; Add a skill manually
 </summary>
 <div style="margin-top:0.75rem;">
@@ -191,11 +195,11 @@
 </div>
 <div class="profile-form-row">
 <div class="profile-field">
-<label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+<label>LinkedIn URL <span style="color:var(--text-light);font-weight:400;">(optional)</span></label>
 <input type="url" id="profile-linkedin" placeholder="https://linkedin.com/in/...">
 </div>
 <div class="profile-field">
-<label>GitHub URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+<label>GitHub URL <span style="color:var(--text-light);font-weight:400;">(optional)</span></label>
 <input type="url" id="profile-github" placeholder="https://github.com/...">
 </div>
 </div>
@@ -215,7 +219,11 @@
 <!-- ── STAFF PORTAL ───────────────────────────────────────────────────── -->
 <div id="staff-portal">
 <header class="navbar">
-<div class="navbar-brand">🎯 LandIt <span style="font-size:0.75rem;opacity:0.7;font-weight:400;">Staff Portal</span></div>
+<div class="navbar-brand">
+<img src="images/logo.png" alt="LandIt" class="navbar-logo">
+<span class="navbar-brand-text">LandIt</span>
+<span style="font-size:0.75rem;opacity:0.7;font-weight:400;font-family:'DM Sans',sans-serif;color:var(--cream);">Staff Portal</span>
+</div>
 <span class="navbar-user" id="staff-navbar-welcome"></span>
 <div class="navbar-actions">
 <button id="staff-btn-signout">Sign Out</button>
@@ -313,11 +321,11 @@ onblur="setTimeout(hideCompanyDropdown, 150)">
 </div>
 </div>
 <div class="form-group">
-<label>Required Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+<label>Required Skills <span style="color:var(--text-light);font-weight:400;">— comma separated</span></label>
 <input type="text" id="p-required-skills" placeholder="Python, SQL, React...">
 </div>
 <div class="form-group">
-<label>Preferred Skills <span style="color:#9ca3af;font-weight:400;">— comma separated</span></label>
+<label>Preferred Skills <span style="color:var(--text-light);font-weight:400;">— comma separated</span></label>
 <input type="text" id="p-preferred-skills" placeholder="Docker, AWS, TypeScript...">
 </div>
 <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
@@ -348,7 +356,7 @@ onblur="setTimeout(hideCompanyDropdown, 150)">
 <div class="modal" style="max-width:560px;">
 <button class="modal-close" onclick="document.getElementById('gap-modal').classList.remove('open')">×</button>
 <h2 id="gap-modal-title">Skill Gap Analysis</h2>
-<p id="gap-modal-subtitle" style="font-size:0.85rem;color:#6b7280;margin-bottom:1.25rem;"></p>
+<p id="gap-modal-subtitle" style="font-size:0.85rem;color:var(--text-light);margin-bottom:1.25rem;"></p>
 <div id="gap-modal-content"></div>
 </div>
 </div>
@@ -373,11 +381,11 @@ onblur="setTimeout(hideCompanyDropdown, 150)">
 <div id="form-signup" style="display:none;">
 <h2 id="signup-form-title">Create Account</h2>
 <div style="display:flex;gap:0.4rem;margin-bottom:1.25rem;">
-<div id="step-dot-1" style="flex:1;height:3px;border-radius:2px;background:#2563eb;transition:background 0.2s;"></div>
-<div id="step-dot-2" style="flex:1;height:3px;border-radius:2px;background:#e5e7eb;transition:background 0.2s;"></div>
+<div id="step-dot-1" style="flex:1;height:3px;border-radius:2px;background:var(--green-dark);transition:background 0.2s;"></div>
+<div id="step-dot-2" style="flex:1;height:3px;border-radius:2px;background:var(--border);transition:background 0.2s;"></div>
 </div>
 <div id="signup-step-1">
-<p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 1 of 2 — Account details</p>
+<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:1rem;">Step 1 of 2 — Account details</p>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
 <div class="form-group">
 <label>First Name</label>
@@ -399,7 +407,7 @@ onblur="setTimeout(hideCompanyDropdown, 150)">
 <button class="btn btn-primary" style="width:100%;" onclick="signupNext()">Next →</button>
 </div>
 <div id="signup-step-2" style="display:none;">
-<p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;">Step 2 of 2 — Your profile</p>
+<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:1rem;">Step 2 of 2 — Your profile</p>
 <div id="signup-step2-student-fields">
 <div class="form-group">
 <label>Degree Programme</label>
@@ -426,11 +434,11 @@ onblur="setTimeout(hideCompanyDropdown, 150)">
 </div>
 </div>
 <div class="form-group">
-<label>Preferred Location <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+<label>Preferred Location <span style="color:var(--text-light);font-weight:400;">(optional)</span></label>
 <input type="text" id="signup-location" placeholder="e.g. London, Remote, Anywhere...">
 </div>
 <div class="form-group">
-<label>LinkedIn URL <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+<label>LinkedIn URL <span style="color:var(--text-light);font-weight:400;">(optional)</span></label>
 <input type="url" id="signup-linkedin" placeholder="https://linkedin.com/in/...">
 </div>
 <div style="display:flex;gap:0.5rem;">

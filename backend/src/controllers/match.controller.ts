@@ -49,7 +49,7 @@ export async function getGapAnalysis(req: AuthRequest, res: Response): Promise<v
 
   const { data: matchResult, error } = await supabase
     .from('match_results')
-    .select('gap_analysis_report, placements(title)')
+    .select('gap_analysis_report, placements(title, description, companies(name))')
     .eq('user_id', userId)
     .eq('placement_id', placementId)
     .maybeSingle();
@@ -71,28 +71,52 @@ export async function getGapAnalysis(req: AuthRequest, res: Response): Promise<v
     return;
   }
 
-  const roleName = (matchResult.placements as unknown as { title: string } | null)?.title ?? 'this role';
+  const placement = matchResult.placements as unknown as {
+    title: string;
+    description: string;
+    companies: { name: string } | null;
+  } | null;
+
+  const roleName = placement?.title ?? 'this role';
+  const companyName = placement?.companies?.name ?? null;
+  const roleDescription = placement?.description ?? null;
 
   let recommendations: { skill: string; how_to_improve: string[] }[] = [];
 
   try {
+    const userContent = [
+      `Role: ${roleName}`,
+      companyName ? `Company: ${companyName}` : null,
+      roleDescription ? `Role description: ${roleDescription.slice(0, 600)}` : null,
+      `Missing required skills: ${missingSkills.join(', ')}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
     const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
           content:
-            'You are a career development advisor. Given a list of missing required technical skills for a job role, ' +
-            'return a JSON array where each object has "skill" (the skill name) and "how_to_improve" ' +
-            '(an array of exactly 3 concise, actionable steps to learn that skill — include official docs, free courses, or a project to build). ' +
+            'You are a senior industry mentor helping a university student prepare for a specific placement role. ' +
+            'Given a job role, company, role description, and a list of skills the student is missing, ' +
+            'return a JSON array where each object has:\n' +
+            '- "skill": the skill name\n' +
+            '- "how_to_improve": an array of exactly 3 highly specific, actionable steps tailored to THIS role and industry.\n\n' +
+            'Each step must:\n' +
+            '- Reference the specific role or industry context (e.g. "for a data engineering role at a fintech...")\n' +
+            '- Be concrete — name actual tools, frameworks, courses, or project ideas directly relevant to the job\n' +
+            '- Progress in difficulty: step 1 = foundation, step 2 = applied practice, step 3 = role-relevant project or portfolio piece\n\n' +
+            'Do NOT give generic advice like "read the docs" or "take an online course". Be specific.\n' +
             'Return ONLY valid JSON — no explanation, no markdown.',
         },
         {
           role: 'user',
-          content: `Role: ${roleName}\nMissing required skills: ${missingSkills.join(', ')}`,
+          content: userContent,
         },
       ],
-      temperature: 0,
+      temperature: 0.4,
     });
 
     const raw = completion.choices[0].message.content?.trim() ?? '[]';

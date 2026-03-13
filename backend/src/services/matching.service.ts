@@ -31,16 +31,18 @@ const SKILL_ALIASES: Record<string, string[]> = {
 };
 
 // ─── SCORE TUNING ────────────────────────────────────────────────────────────
-// REQ_CURVE_POWER  exponent on requiredCoverage — 0.5 = sqrt (lenient), 1.0 = linear (strict)
+// REQ_CURVE_POWER  exponent on requiredCoverage — lower = more generous (0.3 = very lenient)
 // REQ_WEIGHT       % of score from required skills  (must sum with PREF_WEIGHT to 100)
 // PREF_WEIGHT      % of score from preferred skills
 // FLOOR_BOOST      bonus added when at least 1 required skill is matched
-// LOW_CAP_MAX      max score when requiredCoverage < 0.2 (prevents weak-match inflation)
-const REQ_CURVE_POWER = 0.5;  // raise toward 1.0 to be stricter
-const REQ_WEIGHT      = 75;   // lower = required skills hurt less
-const PREF_WEIGHT     = 25;   // raise = preferred skills rewarded more
-const FLOOR_BOOST     = 8;    // raise for more optimistic partial matches
-const LOW_CAP_MAX     = 40;   // raise to be more lenient on very weak matches
+// BASE_BOOST       flat bonus added to every non-zero score
+// LOW_CAP_MAX      max score when requiredCoverage < 0.2
+const REQ_CURVE_POWER = 0.3;  // very aggressive curve — raise toward 1.0 to be stricter
+const REQ_WEIGHT      = 70;   // lower = required skills hurt less
+const PREF_WEIGHT     = 30;   // raise = preferred skills rewarded more
+const FLOOR_BOOST     = 15;   // big floor for any partial match
+const BASE_BOOST      = 10;   // flat bonus on every non-zero score
+const LOW_CAP_MAX     = 50;   // generous even for weak matches
 // ─────────────────────────────────────────────────────────────────────────────
 
 function skillMatches(studentName: string, placementName: string): boolean {
@@ -85,16 +87,17 @@ const prefCoverage = prefPs.length > 0 ? hitPref.length / prefPs.length : 0;
 let score: number;
 
 if (reqCoverage !== null) {
-const curvedReq = Math.pow(reqCoverage, REQ_CURVE_POWER);
-score = Math.round(100 * ((REQ_WEIGHT / 100) * curvedReq + (PREF_WEIGHT / 100) * prefCoverage));
-if (hitReq.length > 0) score += FLOOR_BOOST;
-if (reqCoverage < 0.2) score = Math.min(score, LOW_CAP_MAX);
+  const curvedReq = Math.pow(reqCoverage, REQ_CURVE_POWER);
+  score = Math.round(100 * ((REQ_WEIGHT / 100) * curvedReq + (PREF_WEIGHT / 100) * prefCoverage));
+  if (hitReq.length > 0) score += FLOOR_BOOST;
+  if (reqCoverage < 0.2) score = Math.min(score, LOW_CAP_MAX);
 } else if (prefPs.length > 0) {
-score = Math.round(100 * ((PREF_WEIGHT / 100) * prefCoverage));
+  score = Math.round(100 * ((PREF_WEIGHT / 100) * prefCoverage));
 } else {
-score = 0;
+  score = 0;
 }
 
+if (score > 0) score = Math.min(score + BASE_BOOST, 100);
 score = Math.max(0, Math.min(score, 100));
 
 return {

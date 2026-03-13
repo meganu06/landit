@@ -200,32 +200,53 @@ list.innerHTML = data.map(b => renderPlacementCard(b.placements, { bookmarked: t
 }
 
 // ── MATCHING ALGORITHM ────────────────────────────────────────────────
+// Tuning constants — adjust these to change how scores feel:
+// REQ_CURVE_POWER  lower = more generous (0.3 very lenient, 1.0 strict linear)
+// REQ_WEIGHT       % of score from required skills (+ PREF_WEIGHT must = 100)
+// PREF_WEIGHT      % of score from preferred skills
+// FLOOR_BOOST      bonus when student matches at least 1 required skill
+// BASE_BOOST       flat bonus added to every non-zero score
+// LOW_CAP_MAX      max score when required coverage is very low (< 20%)
+const REQ_CURVE_POWER = 0.65;
+const REQ_WEIGHT      = 75;
+const PREF_WEIGHT     = 25;
+const FLOOR_BOOST     = 8;
+const BASE_BOOST      = 5;
+const LOW_CAP_MAX     = 35;
+
 function calculateScore(placement) {
 const userSkillNames = userSkills.map(s => (s.skills?.name || s.skill_name || '').toLowerCase());
 const placementSkills = placement.placement_skills || [];
 
 if (!placementSkills.length) return { score: 0, matched: [], missing: [], preferredSkills: [], matchedPref: [] };
 
-const reqPs = placementSkills.filter(ps => ps.importance === 'required');
+const reqPs  = placementSkills.filter(ps => ps.importance === 'required');
 const prefPs = placementSkills.filter(ps => ps.importance !== 'required');
 
-const matchedReq = reqPs.filter(ps => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
+const matchedReq  = reqPs.filter(ps  => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
 const matchedPref = prefPs.filter(ps => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
 
-const reqCoverage = reqPs.length > 0 ? matchedReq.length / reqPs.length : null;
-const prefCoverage = prefPs.length > 0 ? matchedPref.length / prefPs.length : null;
+const reqCoverage  = reqPs.length  > 0 ? matchedReq.length  / reqPs.length  : null;
+const prefCoverage = prefPs.length > 0 ? matchedPref.length / prefPs.length : 0;
 
 let score;
-if (reqCoverage !== null && prefCoverage !== null) score = Math.round(reqCoverage * 70 + prefCoverage * 30);
-else if (reqCoverage !== null) score = Math.round(reqCoverage * 100);
-else if (prefCoverage !== null) score = Math.round(prefCoverage * 100);
-else score = 0;
 
-// Soft gate: only if missing every single required skill
-if (reqPs.length > 0 && matchedReq.length === 0) score = Math.min(score, 20);
+if (reqCoverage !== null) {
+  const curvedReq = Math.pow(reqCoverage, REQ_CURVE_POWER);
+  score = Math.round(100 * ((REQ_WEIGHT / 100) * curvedReq + (PREF_WEIGHT / 100) * prefCoverage));
+  if (matchedReq.length > 0) score += FLOOR_BOOST;
+  if (reqCoverage < 0.2) score = Math.min(score, LOW_CAP_MAX);
+} else if (prefPs.length > 0) {
+  score = Math.round(100 * ((PREF_WEIGHT / 100) * prefCoverage));
+} else {
+  score = 0;
+}
+
+if (score > 0) score = Math.min(score + BASE_BOOST, 100);
+score = Math.max(0, Math.min(score, 100));
 
 return {
-score: Math.min(score, 100),
+score,
 matched: matchedReq.map(ps => ps.skills?.name).filter(Boolean),
 missing: reqPs.filter(ps => !userSkillNames.includes((ps.skills?.name || '').toLowerCase())).map(ps => ps.skills?.name).filter(Boolean),
 preferredSkills: prefPs.map(ps => ps.skills?.name).filter(Boolean),
@@ -255,7 +276,10 @@ if (inserts.length) await sb.from('match_results').insert(inserts);
 
 const scores = Object.values(matchScores).map(m => m.score);
 const best = scores.length ? Math.max(...scores) : 0;
-document.getElementById('stat-best-match').textContent = `${best}%`;
+
+const bestEl = document.getElementById('stat-best-match');
+bestEl.textContent = `${best}%`;
+bestEl.style.color = best >= 70 ? '#2e7d32' : best >= 40 ? '#f59e0b' : best > 0 ? '#dc2626' : '';
 
 renderTopMatches();
 renderAllPlacements();
@@ -320,10 +344,8 @@ const match = matchScores[p.id] || { score: 0, matched: [], missing: [], preferr
 const company = p.companies?.name || 'Unknown company';
 const isBookmarked = opts.bookmarked;
 
-// Score-based left-border class
 const borderClass = match.score >= 70 ? 'match-high' : match.score >= 40 ? 'match-medium' : match.score > 0 ? 'match-low' : '';
 
-// Required skills: green if matched, red if missing
 const reqMatchedTags = match.matched.map(s =>
 `<span class="badge badge-green">✓ ${s}</span>`
 ).join('');
@@ -331,7 +353,6 @@ const reqMissingTags = match.missing.map(s =>
 `<span class="badge badge-red">✗ ${s}</span>`
 ).join('');
 
-// Preferred skills: blue if student has them, gray if not
 const prefMissing = (match.preferredSkills || []).filter(s => !(match.matchedPref || []).includes(s));
 const prefMatchedTags = (match.matchedPref || []).map(s =>
 `<span class="badge badge-blue">✓ ${s}</span>`
@@ -340,7 +361,6 @@ const prefMissingTags = prefMissing.map(s =>
 `<span class="badge badge-gray">${s}</span>`
 ).join('');
 
-// Description expand/collapse
 const fullDesc = p.description || '';
 const shortDesc = fullDesc.slice(0, 160);
 const needsExpand = fullDesc.length > 160;
