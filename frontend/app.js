@@ -276,7 +276,10 @@ if (inserts.length) await sb.from('match_results').insert(inserts);
 
 const scores = Object.values(matchScores).map(m => m.score);
 const best = scores.length ? Math.max(...scores) : 0;
-document.getElementById('stat-best-match').textContent = `${best}%`;
+
+const bestEl = document.getElementById('stat-best-match');
+bestEl.textContent = `${best}%`;
+bestEl.style.color = best >= 70 ? '#2e7d32' : best >= 40 ? '#f59e0b' : best > 0 ? '#dc2626' : '';
 
 renderTopMatches();
 renderAllPlacements();

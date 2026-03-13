@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -5,7 +7,12 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f9fafb;
-  color: #1f2937;
+  font-family: 'DM Sans', sans-serif;
+  background-color: #f0ede8;
+  color: #1e2d24;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Atteron', 'DM Sans', sans-serif;
+  color: #344e41;
 }

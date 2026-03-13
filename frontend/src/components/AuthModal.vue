@@ -128,7 +128,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(30, 45, 36, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -136,11 +136,19 @@ export default {
 }
 
 .auth-modal {
-  background: white;
-  border-radius: 12px;
+  background: #ffffff;
+  border-radius: 16px;
   padding: 2rem;
   width: 90%;
   max-width: 400px;
+  box-shadow: 0 20px 40px rgba(52, 78, 65, 0.16);
+}
+
+.auth-modal h2 {
+  font-family: 'Atteron', 'DM Sans', sans-serif;
+  color: #344e41;
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
 }
 
 .form-group {
@@ -151,51 +159,78 @@ export default {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
+  font-size: 0.85rem;
+  color: #4a5e52;
 }
 
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 1rem;
+  border: 1px solid #c8c4bb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: 'DM Sans', sans-serif;
+  background: #ffffff;
+  color: #1e2d24;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-group input:focus {
+  border-color: #344e41;
+  box-shadow: 0 0 0 3px rgba(52, 78, 65, 0.12);
 }
 
 .btn-primary {
-  background: #2563eb;
-  color: white;
+  background: #344e41;
+  color: #dad7cd;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
   font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   width: 100%;
   margin-top: 1rem;
+  transition: background 0.15s;
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: #3a5a40;
 }
 
 .message {
-  padding: 1rem;
-  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
   margin-top: 1rem;
+  font-size: 0.875rem;
 }
 
 .message.success {
-  background: #d1fae5;
-  color: #065f46;
+  background: #d6e8d6;
+  color: #2d5a2d;
 }
 
 .message.error {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #f5dede;
+  color: #8b2222;
+}
+
+p {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #7a8c80;
+  text-align: center;
 }
 
 a {
-  color: #2563eb;
+  color: #344e41;
   cursor: pointer;
   text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: #3a5a40;
 }
 </style>
