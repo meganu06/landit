@@ -1,1 +1,182 @@
-aW1wb3J0IHsgUmVzcG9uc2UgfSBmcm9tICdleHByZXNzJzsKaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tICcuLi9zdXBhYmFzZS9jbGllbnQnOwppbXBvcnQgeyBBdXRoUmVxdWVzdCB9IGZyb20gJy4uL21pZGRsZXdhcmUvYXV0aCc7CmltcG9ydCBPcGVuQUkgZnJvbSAnb3BlbmFpJzsKaW1wb3J0IHsgYW5vbnltaXplIH0gZnJvbSAnLi4vc2VydmljZXMvYW5vbnltaXplci5zZXJ2aWNlJzsKaW1wb3J0IHsgcnVuTWF0Y2hpbmdGb3JVc2VyIH0gZnJvbSAnLi4vc2VydmljZXMvbWF0Y2hpbmcuc2VydmljZSc7CgpmdW5jdGlvbiBnZXRPcGVuQUkoKSB7CiAgcmV0dXJuIG5ldyBPcGVuQUkoeyBhcGlLZXk6IHByb2Nlc3MuZW52Lk9QRU5BSV9BUElfS0VZIH0pOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gdXBsb2FkQ1YocmVxOiBBdXRoUmVxdWVzdCwgcmVzOiBSZXNwb25zZSk6IFByb21pc2U8dm9pZD4gewogIGlmICghcmVxLmZpbGUpIHsKICAgIHJlcy5zdGF0dXMoNDAwKS5qc29uKHsgZXJyb3I6ICdObyBmaWxlIHVwbG9hZGVkJyB9KTsKICAgIHJldHVybjsKICB9CgogIGNvbnN0IHsgb3JpZ2luYWxuYW1lLCBidWZmZXIsIHNpemUsIG1pbWV0eXBlIH0gPSByZXEuZmlsZTsKICBjb25zdCBhbGxvd2VkVHlwZXMgPSBbCiAgICAnYXBwbGljYXRpb24vcGRmJywKICAgICdhcHBsaWNhdGlvbi92bmQub3BlbnhtbGZvcm1hdHMtb2ZmaWNlZG9jdW1lbnQud29yZHByb2Nlc3NpbmdtbC5kb2N1bWVudCcsCiAgXTsKCiAgaWYgKCFhbGxvd2VkVHlwZXMuaW5jbHVkZXMobWltZXR5cGUpKSB7CiAgICByZXMuc3RhdHVzKDQwMCkuanNvbih7IGVycm9yOiAnT25seSBQREYgYW5kIERPQ1ggZmlsZXMgYXJlIGFjY2VwdGVkJyB9KTsKICAgIHJldHVybjsKICB9CgogIGNvbnN0IHVzZXJJZCA9IHJlcS51c2VyIS5pZDsKICBjb25zdCBleHQgPSBvcmlnaW5hbG5hbWUuc3BsaXQoJy4nKS5wb3AoKTsKICBjb25zdCBzdG9yYWdlUGF0aCA9IGAke3VzZXJJZH0vJHtEYXRlLm5vdygpfS4ke2V4dH1gOwoKICAvLyBVcGxvYWQgdG8gU3VwYWJhc2UgU3RvcmFnZQogIGNvbnN0IHsgZXJyb3I6IHVwbG9hZEVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5zdG9yYWdlCiAgICAuZnJvbSgnY3ZzJykKICAgIC51cGxvYWQoc3RvcmFnZVBhdGgsIGJ1ZmZlciwgeyBjb250ZW50VHlwZTogbWltZXR5cGUsIHVwc2VydDogZmFsc2UgfSk7CgogIGlmICh1cGxvYWRFcnJvcikgewogICAgcmVzLnN0YXR1cyg1MDApLmpzb24oeyBlcnJvcjogYFN0b3JhZ2UgdXBsb2FkIGZhaWxlZDogJHt1cGxvYWRFcnJvci5tZXNzYWdlfWAgfSk7CiAgICByZXR1cm47CiAgfQoKICBjb25zdCB7IGRhdGE6IHsgcHVibGljVXJsIH0gfSA9IHN1cGFiYXNlLnN0b3JhZ2UuZnJvbSgnY3ZzJykuZ2V0UHVibGljVXJsKHN0b3JhZ2VQYXRoKTsKCiAgLy8gU2F2ZSByZWNvcmQgdG8gY3ZzIHRhYmxlCiAgY29uc3QgeyBkYXRhLCBlcnJvcjogZGJFcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UKICAgIC5mcm9tKCdjdnMnKQogICAgLmluc2VydCh7CiAgICAgIHVzZXJfaWQ6IHVzZXJJZCwKICAgICAgZmlsZV9uYW1lOiBvcmlnaW5hbG5hbWUsCiAgICAgIGZpbGVfdXJsOiBwdWJsaWNVcmwsCiAgICAgIGZpbGVfc2l6ZTogc2l6ZSwKICAgIH0pCiAgICAuc2VsZWN0KCkKICAgIC5zaW5nbGUoKTsKCiAgaWYgKGRiRXJyb3IpIHsKICAgIHJlcy5zdGF0dXMoNTAwKS5qc29uKHsgZXJyb3I6IGRiRXJyb3IubWVzc2FnZSB9KTsKICAgIHJldHVybjsKICB9CgogIHJlcy5zdGF0dXMoMjAxKS5qc29uKGRhdGEpOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gZXh0cmFjdFNraWxscyhyZXE6IEF1dGhSZXF1ZXN0LCByZXM6IFJlc3BvbnNlKTogUHJvbWlzZTx2b2lkPiB7CiAgY29uc3QgeyB0ZXh0IH0gPSByZXEuYm9keTsKICBjb25zdCB1c2VySWQgPSByZXEudXNlciEuaWQ7CgogIGlmICghdGV4dCB8fCB0eXBlb2YgdGV4dCAhPT0gJ3N0cmluZycgfHwgdGV4dC50cmltKCkubGVuZ3RoIDwgMjApIHsKICAgIHJlcy5zdGF0dXMoNDAwKS5qc29uKHsgZXJyb3I6ICdObyBDViB0ZXh0IHByb3ZpZGVkJyB9KTsKICAgIHJldHVybjsKICB9CgogIC8vIEFub255bWl6ZSBiZWZvcmUgYW55IExMTSBzZWVzIHRoZSB0ZXh0CiAgY29uc3QgY2xlYW5UZXh0ID0gYW5vbnltaXplKHRleHQpOwoKICAvLyBBc2sgR1BUIHRvIGV4dHJhY3Qgc2tpbGxzIGZyb20gdGhlIGFub255bWl6ZWQgQ1YgdGV4dAogIGxldCBleHRyYWN0ZWROYW1lczogc3RyaW5nW10gPSBbXTsKICB0cnkgewogICAgY29uc3QgY29tcGxldGlvbiA9IGF3YWl0IGdldE9wZW5BSSgpLmNoYXQuY29tcGxldGlvbnMuY3JlYXRlKHsKICAgICAgbW9kZWw6ICdncHQtNG8tbWluaScsCiAgICAgIG1lc3NhZ2VzOiBbCiAgICAgICAgewogICAgICAgICAgcm9sZTogJ3N5c3RlbScsCiAgICAgICAgICBjb250ZW50OgogICAgICAgICAgICAnWW91IGFyZSBhIENWIHNraWxsIGV4dHJhY3Rvci4gRXh0cmFjdCBhbGwgdGVjaG5pY2FsIGFuZCBwcm9mZXNzaW9uYWwgc2tpbGxzIGZyb20gdGhlIENWIHRleHQgcHJvdmlkZWQuICcgKwogICAgICAgICAgICAnUmV0dXJuIE9OTFkgYSB2YWxpZCBKU09OIGFycmF5IG9mIHNraWxsIG5hbWUgc3RyaW5ncyDigJQgbm8gZXhwbGFuYXRpb24sIG5vIG1hcmtkb3duLCBqdXN0IHRoZSBhcnJheS4gJyArCiAgICAgICAgICAgICdSdWxlczogYmUgc3BlY2lmaWMgKGUuZy4gIlJlYWN0IiBub3QgIndlYiBkZXZlbG9wbWVudCIpLCBub3JtYWxpc2UgY2FwaXRhbGlzYXRpb24gKGUuZy4gIkphdmFTY3JpcHQiLCAiQVdTIiwgIlBvc3RncmVTUUwiKSwgJyArCiAgICAgICAgICAgICdpbmNsdWRlIGxhbmd1YWdlcywgZnJhbWV3b3JrcywgdG9vbHMsIGNsb3VkIHBsYXRmb3Jtcywgb3RoZXIgcGxhdGZvcm1zLCBkYXRhYmFzZXMsIGFuZCBtZXRob2RvbG9naWVzLCByZW1vdmUgZHVwbGljYXRlcywgbWF4IDUwIHNraWxscy4nLAogICAgICAgIH0sCiAgICAgICAgeyByb2xlOiAndXNlcicsIGNvbnRlbnQ6IGNsZWFuVGV4dC5zbGljZSgwLCAxMjAwMCkgfSwKICAgICAgXSwKICAgICAgdGVtcGVyYXR1cmU6IDAsCiAgICB9KTsKCiAgICBjb25zdCByYXcgPSBjb21wbGV0aW9uLmNob2ljZXNbMF0ubWVzc2FnZS5jb250ZW50Py50cmltKCkgPz8gJ1tdJzsKICAgIC8vIFN0cmlwIGFueSBhY2NpZGVudGFsIG1hcmtkb3duIGZlbmNlcwogICAgY29uc3QgY2xlYW4gPSByYXcucmVwbGFjZSgvXmBgYGpzb24/XHMqL2ksICcnKS5yZXBsYWNlKC9ccypgYGAkLywgJycpOwogICAgZXh0cmFjdGVkTmFtZXMgPSBKU09OLnBhcnNlKGNsZWFuKTsKICAgIGlmICghQXJyYXkuaXNBcnJheShleHRyYWN0ZWROYW1lcykpIGV4dHJhY3RlZE5hbWVzID0gW107CiAgfSBjYXRjaCAoZXJyKSB7CiAgICByZXMuc3RhdHVzKDUwMCkuanNvbih7IGVycm9yOiAnT3BlbkFJIGV4dHJhY3Rpb24gZmFpbGVkOiAnICsgKGVyciBhcyBFcnJvcikubWVzc2FnZSB9KTsKICAgIHJldHVybjsKICB9CgogIGlmIChleHRyYWN0ZWROYW1lcy5sZW5ndGggPT09IDApIHsKICAgIHJlcy5qc29uKHsgc2tpbGxzOiBbXSB9KTsKICAgIHJldHVybjsKICB9CgogIC8vIEZvciBlYWNoIGV4dHJhY3RlZCBza2lsbCBuYW1lLCBmaW5kLW9yLWNyZWF0ZSBhIHJvdyBpbiB0aGUgc2tpbGxzIHRhYmxlCiAgY29uc3Qgc2tpbGxJZHM6IHsgaWQ6IHN0cmluZzsgbmFtZTogc3RyaW5nIH1bXSA9IFtdOwogIGZvciAoY29uc3QgbmFtZSBvZiBleHRyYWN0ZWROYW1lcykgewogICAgY29uc3QgdHJpbW1lZCA9IG5hbWUudHJpbSgpOwogICAgaWYgKCF0cmltbWVkKSBjb250aW51ZTsKCiAgICAvLyBUcnkgdG8gZmluZCBleGlzdGluZyBza2lsbCAoY2FzZS1pbnNlbnNpdGl2ZSkKICAgIGNvbnN0IHsgZGF0YTogZXhpc3RpbmcgfSA9IGF3YWl0IHN1cGFiYXNlCiAgICAgIC5mcm9tKCdza2lsbHMnKQogICAgICAuc2VsZWN0KCdpZCwgbmFtZScpCiAgICAgIC5pbGlrZSgnbmFtZScsIHRyaW1tZWQpCiAgICAgIC5saW1pdCgxKQogICAgICAubWF5YmVTaW5nbGUoKTsKCiAgICBpZiAoZXhpc3RpbmcpIHsKICAgICAgc2tpbGxJZHMucHVzaChleGlzdGluZyk7CiAgICB9IGVsc2UgewogICAgICAvLyBDcmVhdGUgbmV3IHNraWxsCiAgICAgIGNvbnN0IHsgZGF0YTogY3JlYXRlZCB9ID0gYXdhaXQgc3VwYWJhc2UKICAgICAgICAuZnJvbSgnc2tpbGxzJykKICAgICAgICAuaW5zZXJ0KHsgbmFtZTogdHJpbW1lZCwgY2F0ZWdvcnk6ICdleHRyYWN0ZWQnIH0pCiAgICAgICAgLnNlbGVjdCgnaWQsIG5hbWUnKQogICAgICAgIC5zaW5nbGUoKTsKICAgICAgaWYgKGNyZWF0ZWQpIHNraWxsSWRzLnB1c2goY3JlYXRlZCk7CiAgICB9CiAgfQoKICAvLyBVcHNlcnQgYWxsIG1hdGNoZWQgc2tpbGxzIGludG8gc3R1ZGVudF9za2lsbHMKICBpZiAoc2tpbGxJZHMubGVuZ3RoID4gMCkgewogICAgY29uc3QgdXBzZXJ0cyA9IHNraWxsSWRzLm1hcChzID0+ICh7CiAgICAgIHVzZXJfaWQ6IHVzZXJJZCwKICAgICAgc2tpbGxfaWQ6IHMuaWQsCiAgICAgIHByb2ZpY2llbmN5X2xldmVsOiAzLAogICAgICBzb3VyY2U6ICdjdicsCiAgICB9KSk7CiAgICBhd2FpdCBzdXBhYmFzZQogICAgICAuZnJvbSgnc3R1ZGVudF9za2lsbHMnKQogICAgICAudXBzZXJ0KHVwc2VydHMsIHsgb25Db25mbGljdDogJ3VzZXJfaWQsc2tpbGxfaWQnIH0pOwogIH0KCiAgLy8gQXV0by10cmlnZ2VyIG1hdGNoaW5nIHNvIGdhcCBhbmFseXNpcyB3b3JrcyBpbW1lZGlhdGVseSBhZnRlciBDViBleHRyYWN0aW9uCiAgdHJ5IHsKICAgIGF3YWl0IHJ1bk1hdGNoaW5nRm9yVXNlcih1c2VySWQpOwogIH0gY2F0Y2ggKG1hdGNoRXJyKSB7CiAgICAvLyBEb24ndCBmYWlsIHRoZSB3aG9sZSByZXF1ZXN0IC0tIHNraWxscyB3ZXJlIHN0aWxsIHNhdmVkIHN1Y2Nlc3NmdWxseQogICAgY29uc2VsZS5lcnJvcignQXV0by1tYXRjaGluZyBmYWlsZWQgYWZ0ZXIgQ1YgZXh0cmFjdGlvbjonLCBtYXRjaEVycik7CiAgfQoKICByZXMuanNvbih7IHNraWxsczogc2tpbGxJZHMgfSk7Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBnZXRNeUNWKHJlcTogQXV0aFJlcXVlc3QsIHJlczogUmVzcG9uc2UpOiBQcm9taXNlPHZvaWQ+IHsKICBjb25zdCB7IGRhdGEsIGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZQogICAgLmZyb20oJ2N2cycpCiAgICAuc2VsZWN0KCcqJykKICAgIC5lcSgndXNlcl9pZCcsIHJlcS51c2VyIS5pZCkKICAgIC5vcmRlcigndXBsb2FkZWRfYXQnLCB7IGFzY2VuZGluZzogZmFsc2UgfSkKICAgIC5saW1pdCgxKQogICAgLm1heWJlU2luZ2xlKCk7CgogIGlmIChlcnJvcikgewogICAgcmVzLnN0YXR1cyg1MDApLmpzb24oeyBlcnJvcjogZXJyb3IubWVzc2FnZSB9KTsKICAgIHJldHVybjsKICB9CgogIGlmICghZGF0YSkgewogICAgcmVzLnN0YXR1cyg0MDQpLmpzb24oeyBlcnJvcjogJ05vIENWIGZvdW5kJyB9KTsKICAgIHJldHVybjsKICB9CgogIHJlcy5qc29uKGRhdGEpOwp9Cg==
+import { Response } from 'express';
+import { supabase } from '../supabase/client';
+import { AuthRequest } from '../middleware/auth';
+import OpenAI from 'openai';
+import { anonymize } from '../services/anonymizer.service';
+import { runMatchingForUser } from '../services/matching.service';
+
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
+
+export async function uploadCV(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.file) {
+    res.status(400).json({ error: 'No file uploaded' });
+    return;
+  }
+
+  const { originalname, buffer, size, mimetype } = req.file;
+  const allowedTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ];
+
+  if (!allowedTypes.includes(mimetype)) {
+    res.status(400).json({ error: 'Only PDF and DOCX files are accepted' });
+    return;
+  }
+
+  const userId = req.user!.id;
+  const ext = originalname.split('.').pop();
+  const storagePath = `${userId}/${Date.now()}.${ext}`;
+
+  // Upload to Supabase Storage
+  const { error: uploadError } = await supabase.storage
+    .from('cvs')
+    .upload(storagePath, buffer, { contentType: mimetype, upsert: false });
+
+  if (uploadError) {
+    res.status(500).json({ error: `Storage upload failed: ${uploadError.message}` });
+    return;
+  }
+
+  const { data: { publicUrl } } = supabase.storage.from('cvs').getPublicUrl(storagePath);
+
+  // Save record to cvs table
+  const { data, error: dbError } = await supabase
+    .from('cvs')
+    .insert({
+      user_id: userId,
+      file_name: originalname,
+      file_url: publicUrl,
+      file_size: size,
+    })
+    .select()
+    .single();
+
+  if (dbError) {
+    res.status(500).json({ error: dbError.message });
+    return;
+  }
+
+  res.status(201).json(data);
+}
+
+export async function extractSkills(req: AuthRequest, res: Response): Promise<void> {
+  const { text } = req.body;
+  const userId = req.user!.id;
+
+  if (!text || typeof text !== 'string' || text.trim().length < 20) {
+    res.status(400).json({ error: 'No CV text provided' });
+    return;
+  }
+
+  // Anonymize before any LLM sees the text
+  const cleanText = anonymize(text);
+
+  // Ask GPT to extract skills from the anonymized CV text
+  let extractedNames: string[] = [];
+  try {
+    const completion = await getOpenAI().chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a CV skill extractor. Extract all technical and professional skills from the CV text provided. ' +
+            'Return ONLY a valid JSON array of skill name strings — no explanation, no markdown, just the array. ' +
+            'Rules: be specific (e.g. "React" not "web development"), normalise capitalisation (e.g. "JavaScript", "AWS", "PostgreSQL"), ' +
+            'include languages, frameworks, tools, cloud platforms, databases, and methodologies, remove duplicates, max 50 skills.',
+        },
+        { role: 'user', content: cleanText.slice(0, 12000) },
+      ],
+      temperature: 0,
+    });
+
+    const raw = completion.choices[0].message.content?.trim() ?? '[]';
+    // Strip any accidental markdown fences
+    const clean = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '');
+    extractedNames = JSON.parse(clean);
+    if (!Array.isArray(extractedNames)) extractedNames = [];
+  } catch (err) {
+    res.status(500).json({ error: 'OpenAI extraction failed: ' + (err as Error).message });
+    return;
+  }
+
+  if (extractedNames.length === 0) {
+    res.json({ skills: [] });
+    return;
+  }
+
+  // For each extracted skill name, find-or-create a row in the skills table
+  const skillIds: { id: string; name: string }[] = [];
+  for (const name of extractedNames) {
+    const trimmed = name.trim();
+    if (!trimmed) continue;
+
+    // Try to find existing skill (case-insensitive)
+    const { data: existing } = await supabase
+      .from('skills')
+      .select('id, name')
+      .ilike('name', trimmed)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      skillIds.push(existing);
+    } else {
+      // Create new skill
+      const { data: created } = await supabase
+        .from('skills')
+        .insert({ name: trimmed, category: 'extracted' })
+        .select('id, name')
+        .single();
+      if (created) skillIds.push(created);
+    }
+  }
+
+  // Upsert all matched skills into student_skills
+  if (skillIds.length > 0) {
+    const upserts = skillIds.map(s => ({
+      user_id: userId,
+      skill_id: s.id,
+      proficiency_level: 3,
+      source: 'cv',
+    }));
+    await supabase
+      .from('student_skills')
+      .upsert(upserts, { onConflict: 'user_id,skill_id' });
+  }
+
+  // Auto-trigger matching so gap analysis works immediately after CV extraction
+  try {
+    await runMatchingForUser(userId);
+  } catch (matchErr) {
+    // Don't fail the whole request -- skills were still saved successfully
+    console.error('Auto-matching failed after CV extraction:', matchErr);
+  }
+
+  res.json({ skills: skillIds });
+}
+
+export async function getMyCV(req: AuthRequest, res: Response): Promise<void> {
+  const { data, error } = await supabase
+    .from('cvs')
+    .select('*')
+    .eq('user_id', req.user!.id)
+    .order('uploaded_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    res.status(500).json({ error: error.message });
+    return;
+  }
+
+  if (!data) {
+    res.status(404).json({ error: 'No CV found' });
+    return;
+  }
+
+  res.json(data);
+}
