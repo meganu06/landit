@@ -24,6 +24,10 @@
     --border:       #c8c4bb;
     --shadow:       rgba(52, 78, 65, 0.10);
     --shadow-md:    rgba(52, 78, 65, 0.16);
+    /* Match colours — clear traffic-light system */
+    --match-high:   #2e7d32;
+    --match-mid:    #f59e0b;
+    --match-low:    #dc2626;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -311,9 +315,9 @@ h1, h2, h3, h4, h5, h6 {
     border-left: 4px solid var(--border);
 }
 .placement-card:hover { box-shadow: 0 4px 12px var(--shadow); }
-.placement-card.match-high   { border-left-color: var(--green-dark); }
-.placement-card.match-medium { border-left-color: var(--green-sage); }
-.placement-card.match-low    { border-left-color: #c0826a; }
+.placement-card.match-high   { border-left: 5px solid var(--match-high); }
+.placement-card.match-medium { border-left: 5px solid var(--match-mid); }
+.placement-card.match-low    { border-left: 5px solid var(--match-low); }
 
 .placement-header {
     display: flex; justify-content: space-between;
@@ -366,9 +370,9 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 700; font-size: 1rem;
     flex-shrink: 0;
 }
-.score-high   { background: #d6e8d6; color: #2d5a2d; }
-.score-medium { background: #f5f0d0; color: #7a5c0a; }
-.score-low    { background: #f5dede; color: #8b2222; }
+.score-high   { background: #c8eac8; color: var(--match-high); }
+.score-medium { background: #fef3c7; color: #b45309; }
+.score-low    { background: #fde8e8; color: var(--match-low); }
 .score-none   { background: var(--cream-light); color: var(--text-light); }
 
 /* ── SKILLS TAB ──────────────────────────── */
