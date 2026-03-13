@@ -30,6 +30,19 @@ const SKILL_ALIASES: Record<string, string[]> = {
 'express': ['express.js', 'expressjs'],
 };
 
+// ─── SCORE TUNING ────────────────────────────────────────────────────────────
+// REQ_CURVE_POWER  exponent on requiredCoverage — 0.5 = sqrt (lenient), 1.0 = linear (strict)
+// REQ_WEIGHT       % of score from required skills  (must sum with PREF_WEIGHT to 100)
+// PREF_WEIGHT      % of score from preferred skills
+// FLOOR_BOOST      bonus added when at least 1 required skill is matched
+// LOW_CAP_MAX      max score when requiredCoverage < 0.2 (prevents weak-match inflation)
+const REQ_CURVE_POWER = 0.5;  // raise toward 1.0 to be stricter
+const REQ_WEIGHT      = 75;   // lower = required skills hurt less
+const PREF_WEIGHT     = 25;   // raise = preferred skills rewarded more
+const FLOOR_BOOST     = 8;    // raise for more optimistic partial matches
+const LOW_CAP_MAX     = 40;   // raise to be more lenient on very weak matches
+// ─────────────────────────────────────────────────────────────────────────────
+
 function skillMatches(studentName: string, placementName: string): boolean {
 const s = (studentName || '').toLowerCase().trim();
 const p = (placementName || '').toLowerCase().trim();
@@ -53,33 +66,39 @@ placementSkills: PlacementSkillRow[]
 ): { score: number; matched: string[]; missing: string[] } {
 if (!placementSkills.length) return { score: 0, matched: [], missing: [] };
 
-const reqPs = placementSkills.filter(ps => ps.importance === 'required');
+const reqPs  = placementSkills.filter(ps => ps.importance === 'required');
 const prefPs = placementSkills.filter(ps => ps.importance !== 'required');
 
 const hasSkill = (psName: string): boolean =>
 userSkills.some(ss => skillMatches(ss.name, psName));
 
-const reqResults = reqPs.map(ps => ({ name: ps.skills?.name ?? '', hit: hasSkill(ps.skills?.name ?? '') }));
+const reqResults  = reqPs.map(ps  => ({ name: ps.skills?.name ?? '', hit: hasSkill(ps.skills?.name ?? '') }));
 const prefResults = prefPs.map(ps => ({ name: ps.skills?.name ?? '', hit: hasSkill(ps.skills?.name ?? '') }));
 
-const hitReq = reqResults.filter(x => x.hit);
+const hitReq  = reqResults.filter(x => x.hit);
 const hitPref = prefResults.filter(x => x.hit);
 const missing = reqResults.filter(x => !x.hit).map(x => x.name).filter(Boolean);
 
-const reqCoverage = reqPs.length > 0 ? hitReq.length / reqPs.length : null;
-const prefCoverage = prefPs.length > 0 ? hitPref.length / prefPs.length : null;
+const reqCoverage  = reqPs.length  > 0 ? hitReq.length  / reqPs.length  : null;
+const prefCoverage = prefPs.length > 0 ? hitPref.length / prefPs.length : 0;
 
 let score: number;
-if (reqCoverage !== null && prefCoverage !== null) score = Math.round(reqCoverage * 70 + prefCoverage * 30);
-else if (reqCoverage !== null) score = Math.round(reqCoverage * 100);
-else if (prefCoverage !== null) score = Math.round(prefCoverage * 100);
-else score = 0;
 
-// Soft gate: missing every required skill caps at 20
-if (reqPs.length > 0 && hitReq.length === 0) score = Math.min(score, 20);
+if (reqCoverage !== null) {
+const curvedReq = Math.pow(reqCoverage, REQ_CURVE_POWER);
+score = Math.round(100 * ((REQ_WEIGHT / 100) * curvedReq + (PREF_WEIGHT / 100) * prefCoverage));
+if (hitReq.length > 0) score += FLOOR_BOOST;
+if (reqCoverage < 0.2) score = Math.min(score, LOW_CAP_MAX);
+} else if (prefPs.length > 0) {
+score = Math.round(100 * ((PREF_WEIGHT / 100) * prefCoverage));
+} else {
+score = 0;
+}
+
+score = Math.max(0, Math.min(score, 100));
 
 return {
-score: Math.min(score, 100),
+score,
 matched: [...hitReq, ...hitPref].map(x => x.name).filter(Boolean),
 missing,
 };
