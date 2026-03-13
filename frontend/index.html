@@ -321,22 +321,12 @@ onblur="setTimeout(hideCompanyDropdown, 150)">
 </div>
 </div>
 <div class="form-group">
-<div id="extract-skills-row" style="margin-bottom:0.85rem;">
-<button type="button" class="btn btn-secondary btn-sm" onclick="extractSkillsFromDescription()">Extract Skills from Description</button>
-<span id="extract-skills-status" style="margin-left:0.6rem;font-size:0.8rem;color:var(--text-light);"></span>
+<label>Required Skills <span style="color:var(--text-light);font-weight:400;">— comma separated</span></label>
+<input type="text" id="p-required-skills" placeholder="Python, SQL, React...">
 </div>
-<label>Required Skills</label>
-<div id="p-required-tags" class="skill-pills" style="margin-bottom:0.5rem;min-height:1.5rem;"></div>
-<div style="display:flex;gap:0.5rem;margin-bottom:0.85rem;">
-<input type="text" id="p-req-add" placeholder="Add required skill…" onkeydown="if(event.key==='Enter'){event.preventDefault();addModalSkill('required');}">
-<button type="button" class="btn btn-secondary btn-sm" onclick="addModalSkill('required')">Add</button>
-</div>
-<label>Preferred Skills</label>
-<div id="p-preferred-tags" class="skill-pills" style="margin-bottom:0.5rem;min-height:1.5rem;"></div>
-<div style="display:flex;gap:0.5rem;">
-<input type="text" id="p-pref-add" placeholder="Add preferred skill…" onkeydown="if(event.key==='Enter'){event.preventDefault();addModalSkill('preferred');}">
-<button type="button" class="btn btn-secondary btn-sm" onclick="addModalSkill('preferred')">Add</button>
-</div>
+<div class="form-group">
+<label>Preferred Skills <span style="color:var(--text-light);font-weight:400;">— comma separated</span></label>
+<input type="text" id="p-preferred-skills" placeholder="Docker, AWS, TypeScript...">
 </div>
 <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
 <button class="btn btn-secondary" onclick="closePlacementModal()">Cancel</button>
@@ -412,7 +402,7 @@ onblur="setTimeout(hideCompanyDropdown, 150)">
 </div>
 <div class="form-group">
 <label>Password</label>
-<input type="password" id="signup-password" placeholder="Min. 6 characters">
+<input type="password" id="signup-password" placeholder="Min. 8 characters">
 </div>
 <button class="btn btn-primary" style="width:100%;" onclick="signupNext()">Next →</button>
 </div>
