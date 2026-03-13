@@ -41,6 +41,25 @@ body {
     letter-spacing: 0.04em;
 }
 
+/* ── LOGO ────────────────────────────────── */
+.landing-logo {
+    height: 80px;
+    width: auto;
+    margin: 0 auto 1.25rem;
+    display: block;
+}
+.navbar-logo {
+    height: 32px;
+    width: auto;
+    display: block;
+    filter: brightness(0) invert(1) opacity(0.92);
+}
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
 /* ── HEADINGS ────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Atteron', 'DM Sans', sans-serif;
@@ -106,13 +125,6 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 2px 8px var(--shadow-md);
-}
-.navbar-brand {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 600;
-    font-size: 1.4rem;
-    letter-spacing: 0.04em;
-    color: var(--cream);
 }
 .navbar-user  { font-size: 0.9rem; opacity: 0.85; color: var(--cream); }
 .navbar-actions { display: flex; gap: 0.5rem; align-items: center; }
@@ -254,7 +266,10 @@ h1, h2, h3, h4, h5, h6 {
     text-align: center;
 }
 .stat-card .stat-value {
-    font-size: 2rem; font-weight: 700;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.6rem;
+    font-weight: 600;
+    line-height: 1;
     margin-bottom: 0.25rem;
 }
 .stat-card .stat-label { font-size: 0.8rem; color: var(--text-light); font-weight: 500; }
@@ -335,7 +350,8 @@ h1, h2, h3, h4, h5, h6 {
     display: inline-flex; align-items: center; justify-content: center;
     width: 56px; height: 56px;
     border-radius: 50%;
-    font-weight: 700; font-size: 0.85rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700; font-size: 1rem;
     flex-shrink: 0;
 }
 .score-high   { background: #d6e8d6; color: #2d5a2d; }
