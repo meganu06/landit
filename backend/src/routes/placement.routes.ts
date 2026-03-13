@@ -6,6 +6,7 @@ createPlacement,
 updatePlacement,
 deletePlacement,
 extractPlacementSkills,
+savePlacementSkillsList,
 } from '../controllers/placement.controller';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 
@@ -14,6 +15,7 @@ const router = Router();
 router.get('/', requireAuth, getPlacements);
 router.get('/:id', requireAuth, getPlacementById);
 router.post('/extract-skills', requireAuth, requireAdmin, extractPlacementSkills);
+router.put('/:id/skills', requireAuth, requireAdmin, savePlacementSkillsList);
 router.post('/', requireAuth, requireAdmin, createPlacement);
 router.put('/:id', requireAuth, requireAdmin, updatePlacement);
 router.delete('/:id', requireAuth, requireAdmin, deletePlacement);
