@@ -200,32 +200,53 @@ list.innerHTML = data.map(b => renderPlacementCard(b.placements, { bookmarked: t
 }
 
 // ── MATCHING ALGORITHM ────────────────────────────────────────────────
+// Tuning constants — adjust these to change how scores feel:
+// REQ_CURVE_POWER  lower = more generous (0.3 very lenient, 1.0 strict linear)
+// REQ_WEIGHT       % of score from required skills (+ PREF_WEIGHT must = 100)
+// PREF_WEIGHT      % of score from preferred skills
+// FLOOR_BOOST      bonus when student matches at least 1 required skill
+// BASE_BOOST       flat bonus added to every non-zero score
+// LOW_CAP_MAX      max score when required coverage is very low (< 20%)
+const REQ_CURVE_POWER = 0.3;
+const REQ_WEIGHT      = 70;
+const PREF_WEIGHT     = 30;
+const FLOOR_BOOST     = 15;
+const BASE_BOOST      = 10;
+const LOW_CAP_MAX     = 50;
+
 function calculateScore(placement) {
 const userSkillNames = userSkills.map(s => (s.skills?.name || s.skill_name || '').toLowerCase());
 const placementSkills = placement.placement_skills || [];
 
 if (!placementSkills.length) return { score: 0, matched: [], missing: [], preferredSkills: [], matchedPref: [] };
 
-const reqPs = placementSkills.filter(ps => ps.importance === 'required');
+const reqPs  = placementSkills.filter(ps => ps.importance === 'required');
 const prefPs = placementSkills.filter(ps => ps.importance !== 'required');
 
-const matchedReq = reqPs.filter(ps => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
+const matchedReq  = reqPs.filter(ps  => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
 const matchedPref = prefPs.filter(ps => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
 
-const reqCoverage = reqPs.length > 0 ? matchedReq.length / reqPs.length : null;
-const prefCoverage = prefPs.length > 0 ? matchedPref.length / prefPs.length : null;
+const reqCoverage  = reqPs.length  > 0 ? matchedReq.length  / reqPs.length  : null;
+const prefCoverage = prefPs.length > 0 ? matchedPref.length / prefPs.length : 0;
 
 let score;
-if (reqCoverage !== null && prefCoverage !== null) score = Math.round(reqCoverage * 70 + prefCoverage * 30);
-else if (reqCoverage !== null) score = Math.round(reqCoverage * 100);
-else if (prefCoverage !== null) score = Math.round(prefCoverage * 100);
-else score = 0;
 
-// Soft gate: only if missing every single required skill
-if (reqPs.length > 0 && matchedReq.length === 0) score = Math.min(score, 20);
+if (reqCoverage !== null) {
+  const curvedReq = Math.pow(reqCoverage, REQ_CURVE_POWER);
+  score = Math.round(100 * ((REQ_WEIGHT / 100) * curvedReq + (PREF_WEIGHT / 100) * prefCoverage));
+  if (matchedReq.length > 0) score += FLOOR_BOOST;
+  if (reqCoverage < 0.2) score = Math.min(score, LOW_CAP_MAX);
+} else if (prefPs.length > 0) {
+  score = Math.round(100 * ((PREF_WEIGHT / 100) * prefCoverage));
+} else {
+  score = 0;
+}
+
+if (score > 0) score = Math.min(score + BASE_BOOST, 100);
+score = Math.max(0, Math.min(score, 100));
 
 return {
-score: Math.min(score, 100),
+score,
 matched: matchedReq.map(ps => ps.skills?.name).filter(Boolean),
 missing: reqPs.filter(ps => !userSkillNames.includes((ps.skills?.name || '').toLowerCase())).map(ps => ps.skills?.name).filter(Boolean),
 preferredSkills: prefPs.map(ps => ps.skills?.name).filter(Boolean),
