@@ -201,18 +201,18 @@ list.innerHTML = data.map(b => renderPlacementCard(b.placements, { bookmarked: t
 
 // ── MATCHING ALGORITHM ────────────────────────────────────────────────
 // Tuning constants — adjust these to change how scores feel:
-// REQ_CURVE_POWER lower = more generous (0.3 very lenient, 1.0 strict linear)
-// REQ_WEIGHT % of score from required skills (+ PREF_WEIGHT must = 100)
-// PREF_WEIGHT % of score from preferred skills
-// FLOOR_BOOST bonus when student matches at least 1 required skill
-// BASE_BOOST flat bonus added to every non-zero score
-// LOW_CAP_MAX max score when required coverage is very low (< 20%)
+// REQ_CURVE_POWER  lower = more generous (0.3 very lenient, 1.0 strict linear)
+// REQ_WEIGHT       % of score from required skills (+ PREF_WEIGHT must = 100)
+// PREF_WEIGHT      % of score from preferred skills
+// FLOOR_BOOST      bonus when student matches at least 1 required skill
+// BASE_BOOST       flat bonus added to every non-zero score
+// LOW_CAP_MAX      max score when required coverage is very low (< 20%)
 const REQ_CURVE_POWER = 0.65;
-const REQ_WEIGHT = 75;
-const PREF_WEIGHT = 25;
-const FLOOR_BOOST = 8;
-const BASE_BOOST = 5;
-const LOW_CAP_MAX = 35;
+const REQ_WEIGHT      = 75;
+const PREF_WEIGHT     = 25;
+const FLOOR_BOOST     = 8;
+const BASE_BOOST      = 5;
+const LOW_CAP_MAX     = 35;
 
 function calculateScore(placement) {
 const userSkillNames = userSkills.map(s => (s.skills?.name || s.skill_name || '').toLowerCase());
@@ -220,26 +220,26 @@ const placementSkills = placement.placement_skills || [];
 
 if (!placementSkills.length) return { score: 0, matched: [], missing: [], preferredSkills: [], matchedPref: [] };
 
-const reqPs = placementSkills.filter(ps => ps.importance === 'required');
+const reqPs  = placementSkills.filter(ps => ps.importance === 'required');
 const prefPs = placementSkills.filter(ps => ps.importance !== 'required');
 
-const matchedReq = reqPs.filter(ps => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
+const matchedReq  = reqPs.filter(ps  => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
 const matchedPref = prefPs.filter(ps => userSkillNames.includes((ps.skills?.name || '').toLowerCase()));
 
-const reqCoverage = reqPs.length > 0 ? matchedReq.length / reqPs.length : null;
+const reqCoverage  = reqPs.length  > 0 ? matchedReq.length  / reqPs.length  : null;
 const prefCoverage = prefPs.length > 0 ? matchedPref.length / prefPs.length : 0;
 
 let score;
 
 if (reqCoverage !== null) {
-const curvedReq = Math.pow(reqCoverage, REQ_CURVE_POWER);
-score = Math.round(100 * ((REQ_WEIGHT / 100) * curvedReq + (PREF_WEIGHT / 100) * prefCoverage));
-if (matchedReq.length > 0) score += FLOOR_BOOST;
-if (reqCoverage < 0.2) score = Math.min(score, LOW_CAP_MAX);
+  const curvedReq = Math.pow(reqCoverage, REQ_CURVE_POWER);
+  score = Math.round(100 * ((REQ_WEIGHT / 100) * curvedReq + (PREF_WEIGHT / 100) * prefCoverage));
+  if (matchedReq.length > 0) score += FLOOR_BOOST;
+  if (reqCoverage < 0.2) score = Math.min(score, LOW_CAP_MAX);
 } else if (prefPs.length > 0) {
-score = Math.round(100 * ((PREF_WEIGHT / 100) * prefCoverage));
+  score = Math.round(100 * ((PREF_WEIGHT / 100) * prefCoverage));
 } else {
-score = 0;
+  score = 0;
 }
 
 if (score > 0) score = Math.min(score + BASE_BOOST, 100);
@@ -782,8 +782,6 @@ document.getElementById('staff-btn-signout').addEventListener('click', () => sb.
 // ── STAFF PORTAL ───────────────────────────────────────────────────────
 let staffCompanies = [];
 let editingPlacementId = null;
-let modalRequiredSkills = [];
-let modalPreferredSkills = [];
 
 async function loadStaffData() {
 await Promise.all([loadStaffPlacements(), loadStaffCompanies()]);
@@ -831,30 +829,23 @@ tbody.innerHTML = data.map(p => `
 <td style="text-align:right;white-space:nowrap;">
 <button class="btn btn-secondary btn-sm" onclick="openPlacementModal('${p.id}')">Edit</button>
 <button class="btn btn-danger btn-sm" style="margin-left:0.4rem;" onclick="togglePlacementActive('${p.id}', ${p.is_active})">${p.is_active ? 'Deactivate' : 'Activate'}</button>
-<button class="btn btn-danger btn-sm" style="margin-left:0.4rem;" onclick="deleteStaffPlacement('${p.id}', '${p.title?.replace(/'/g, "\\'")}')">Delete</button>
 </td>
 </tr>
 `).join('');
 }
 
-async function openPlacementModal(placementId = null) {
+function openPlacementModal(placementId = null) {
 editingPlacementId = placementId;
 document.getElementById('placement-modal-title').textContent = placementId ? 'Edit Placement' : 'Add Placement';
 document.getElementById('placement-modal-msg').innerHTML = '';
 
-['p-title','p-description','p-location','p-salary','p-deadline','p-link']
+['p-title','p-description','p-location','p-salary','p-deadline','p-link','p-required-skills','p-preferred-skills']
 .forEach(id => document.getElementById(id).value = '');
 document.getElementById('p-company-search').value = '';
 document.getElementById('p-company').value = '';
 hideCompanyDropdown();
 
-modalRequiredSkills = [];
-modalPreferredSkills = [];
-renderModalSkills();
-document.getElementById('extract-skills-row').style.display = '';
-document.getElementById('extract-skills-status').textContent = '';
-
-if (placementId) await loadPlacementForEdit(placementId);
+if (placementId) loadPlacementForEdit(placementId);
 document.getElementById('placement-modal').classList.add('open');
 }
 
@@ -876,19 +867,10 @@ document.getElementById('p-salary').value = data.salary_range || '';
 document.getElementById('p-deadline').value = data.deadline?.slice(0, 10) || '';
 document.getElementById('p-link').value = data.application_link || '';
 
-modalRequiredSkills = (data.placement_skills || [])
-.filter(ps => ps.importance === 'required')
-.map(ps => ps.skills?.name)
-.filter(Boolean);
-modalPreferredSkills = (data.placement_skills || [])
-.filter(ps => ps.importance !== 'required')
-.map(ps => ps.skills?.name)
-.filter(Boolean);
-renderModalSkills();
-
-if (modalRequiredSkills.length || modalPreferredSkills.length) {
-document.getElementById('extract-skills-row').style.display = 'none';
-}
+const req = (data.placement_skills || []).filter(ps => ps.importance === 'required').map(ps => ps.skills?.name).filter(Boolean).join(', ');
+const pref = (data.placement_skills || []).filter(ps => ps.importance !== 'required').map(ps => ps.skills?.name).filter(Boolean).join(', ');
+document.getElementById('p-required-skills').value = req;
+document.getElementById('p-preferred-skills').value = pref;
 }
 
 function closePlacementModal() {
@@ -934,94 +916,30 @@ loadStaffPlacements();
 }
 
 async function savePlacementSkills(placementId) {
-const { data: { session } } = await sb.auth.getSession();
-await fetch(`http://localhost:3001/api/placements/${placementId}/skills`, {
-method: 'PUT',
-headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-body: JSON.stringify({ required: modalRequiredSkills, preferred: modalPreferredSkills }),
-});
-}
+const requiredNames = document.getElementById('p-required-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+const preferredNames = document.getElementById('p-preferred-skills').value.split(',').map(s => s.trim()).filter(Boolean);
 
-function renderModalSkills() {
-const reqEl = document.getElementById('p-required-tags');
-const prefEl = document.getElementById('p-preferred-tags');
-if (!reqEl || !prefEl) return;
-reqEl.innerHTML = modalRequiredSkills.map((s, i) =>
-`<span class="skill-tag">${s}<button type="button" onclick="removeModalSkill('required',${i})">×</button></span>`
-).join('');
-prefEl.innerHTML = modalPreferredSkills.map((s, i) =>
-`<span class="skill-tag">${s}<button type="button" onclick="removeModalSkill('preferred',${i})">×</button></span>`
-).join('');
-}
+await sb.from('placement_skills').delete().eq('placement_id', placementId);
 
-function removeModalSkill(type, index) {
-if (type === 'required') modalRequiredSkills.splice(index, 1);
-else modalPreferredSkills.splice(index, 1);
-renderModalSkills();
-}
+const all = [
+...requiredNames.map(name => ({ name, importance: 'required' })),
+...preferredNames.map(name => ({ name, importance: 'preferred' })),
+];
 
-function addModalSkill(type) {
-const inputId = type === 'required' ? 'p-req-add' : 'p-pref-add';
-const input = document.getElementById(inputId);
-const name = input.value.trim();
-if (!name) return;
-const lower = name.toLowerCase();
-if (type === 'required') {
-if (!modalRequiredSkills.some(s => s.toLowerCase() === lower)) modalRequiredSkills.push(name);
-} else {
-if (!modalPreferredSkills.some(s => s.toLowerCase() === lower)) modalPreferredSkills.push(name);
+for (const { name, importance } of all) {
+const { data: existing } = await sb.from('skills').select('id').ilike('name', name).limit(1).maybeSingle();
+let skillId = existing?.id;
+if (!skillId) {
+const { data: created } = await sb.from('skills').insert({ name, category: 'technical' }).select('id').single();
+skillId = created?.id;
 }
-input.value = '';
-renderModalSkills();
-}
-
-async function extractSkillsFromDescription() {
-const description = document.getElementById('p-description').value.trim();
-const msgEl = document.getElementById('placement-modal-msg');
-const statusEl = document.getElementById('extract-skills-status');
-if (!description) {
-showMsg(msgEl, 'Please enter a description before extracting skills.', 'error');
-return;
-}
-statusEl.textContent = 'Extracting…';
-const { data: { session } } = await sb.auth.getSession();
-try {
-const res = await fetch('http://localhost:3001/api/placements/extract-skills', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-body: JSON.stringify({ description }),
-});
-const json = await res.json();
-if (!res.ok) throw new Error(json.error || 'Skill extraction failed.');
-const skills = json.skills || [];
-modalRequiredSkills = skills.filter(s => s.importance === 'required').map(s => s.name);
-modalPreferredSkills = skills.filter(s => s.importance !== 'required').map(s => s.name);
-renderModalSkills();
-statusEl.textContent = `${skills.length} skill${skills.length === 1 ? '' : 's'} extracted`;
-} catch (err) {
-showMsg(msgEl, err.message, 'error');
-statusEl.textContent = '';
+if (skillId) await sb.from('placement_skills').insert({ placement_id: placementId, skill_id: skillId, importance });
 }
 }
 
 async function togglePlacementActive(id, currentlyActive) {
 if (!confirm(`${currentlyActive ? 'Deactivate' : 'Activate'} this placement?`)) return;
 await sb.from('placements').update({ is_active: !currentlyActive }).eq('id', id);
-loadStaffPlacements();
-}
-
-async function deleteStaffPlacement(id, title) {
-if (!confirm(`Permanently delete "${title}"? This cannot be undone.`)) return;
-const { data: { session } } = await sb.auth.getSession();
-const res = await fetch(`http://localhost:3001/api/placements/${id}`, {
-method: 'DELETE',
-headers: { 'Authorization': `Bearer ${session.access_token}` },
-});
-if (!res.ok) {
-const json = await res.json().catch(() => ({}));
-alert(json.error || 'Failed to delete placement.');
-return;
-}
 loadStaffPlacements();
 }
 
@@ -1035,7 +953,7 @@ const matches = q
 : staffCompanies;
 
 let html = matches.map(c => `
-<div class="company-option" onmousedown="selectCompany('${c.id}', '${c.name.replace(/'/g, "\\'")}')">
+<div class="company-option" onmousedown="selectCompany('${c.id}', '${c.name.replace(/'/g, "\\'")}')"> 
 ${c.name}
 ${c.industry ? `<span class="co-industry">${c.industry}</span>` : ''}
 </div>
