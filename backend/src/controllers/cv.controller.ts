@@ -3,6 +3,7 @@ import { supabase } from '../supabase/client';
 import { AuthRequest } from '../middleware/auth';
 import OpenAI from 'openai';
 import { anonymize } from '../services/anonymizer.service';
+import { runMatchingForUser } from '../services/matching.service';
 
 function getOpenAI() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -145,6 +146,14 @@ export async function extractSkills(req: AuthRequest, res: Response): Promise<vo
     await supabase
       .from('student_skills')
       .upsert(upserts, { onConflict: 'user_id,skill_id' });
+  }
+
+  // Auto-trigger matching so gap analysis works immediately after CV extraction
+  try {
+    await runMatchingForUser(userId);
+  } catch (matchErr) {
+    // Don't fail the whole request -- skills were still saved successfully
+    console.error('Auto-matching failed after CV extraction:', matchErr);
   }
 
   res.json({ skills: skillIds });
