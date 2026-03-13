@@ -207,12 +207,12 @@ list.innerHTML = data.map(b => renderPlacementCard(b.placements, { bookmarked: t
 // FLOOR_BOOST      bonus when student matches at least 1 required skill
 // BASE_BOOST       flat bonus added to every non-zero score
 // LOW_CAP_MAX      max score when required coverage is very low (< 20%)
-const REQ_CURVE_POWER = 0.3;
-const REQ_WEIGHT      = 70;
-const PREF_WEIGHT     = 30;
-const FLOOR_BOOST     = 15;
-const BASE_BOOST      = 10;
-const LOW_CAP_MAX     = 50;
+const REQ_CURVE_POWER = 0.65;
+const REQ_WEIGHT      = 75;
+const PREF_WEIGHT     = 25;
+const FLOOR_BOOST     = 8;
+const BASE_BOOST      = 5;
+const LOW_CAP_MAX     = 35;
 
 function calculateScore(placement) {
 const userSkillNames = userSkills.map(s => (s.skills?.name || s.skill_name || '').toLowerCase());
@@ -341,10 +341,8 @@ const match = matchScores[p.id] || { score: 0, matched: [], missing: [], preferr
 const company = p.companies?.name || 'Unknown company';
 const isBookmarked = opts.bookmarked;
 
-// Score-based left-border class
 const borderClass = match.score >= 70 ? 'match-high' : match.score >= 40 ? 'match-medium' : match.score > 0 ? 'match-low' : '';
 
-// Required skills: green if matched, red if missing
 const reqMatchedTags = match.matched.map(s =>
 `<span class="badge badge-green">✓ ${s}</span>`
 ).join('');
@@ -352,7 +350,6 @@ const reqMissingTags = match.missing.map(s =>
 `<span class="badge badge-red">✗ ${s}</span>`
 ).join('');
 
-// Preferred skills: blue if student has them, gray if not
 const prefMissing = (match.preferredSkills || []).filter(s => !(match.matchedPref || []).includes(s));
 const prefMatchedTags = (match.matchedPref || []).map(s =>
 `<span class="badge badge-blue">✓ ${s}</span>`
@@ -361,7 +358,6 @@ const prefMissingTags = prefMissing.map(s =>
 `<span class="badge badge-gray">${s}</span>`
 ).join('');
 
-// Description expand/collapse
 const fullDesc = p.description || '';
 const shortDesc = fullDesc.slice(0, 160);
 const needsExpand = fullDesc.length > 160;
