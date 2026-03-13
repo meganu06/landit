@@ -59,6 +59,13 @@ body {
     align-items: center;
     gap: 0.6rem;
 }
+.navbar-brand-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.04em;
+    color: var(--cream);
+}
 
 /* ── HEADINGS ────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
@@ -86,11 +93,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 .landing-card h1 {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 2.6rem;
-    font-weight: 600;
+    font-size: 3.8rem;
+    font-weight: 700;
     color: var(--green-dark);
     margin-bottom: 0.5rem;
     letter-spacing: 0.04em;
+    line-height: 1;
 }
 .landing-card p { color: var(--text-light); margin-bottom: 2rem; line-height: 1.6; }
 .landing-features {
@@ -262,15 +270,19 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--white);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 1.25rem;
+    padding: 1.5rem 1.25rem;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
 }
 .stat-card .stat-value {
     font-family: 'Cormorant Garamond', serif;
     font-size: 2.6rem;
     font-weight: 600;
     line-height: 1;
-    margin-bottom: 0.25rem;
 }
 .stat-card .stat-label { font-size: 0.8rem; color: var(--text-light); font-weight: 500; }
 .stat-card.green .stat-value  { color: var(--green-dark); }
