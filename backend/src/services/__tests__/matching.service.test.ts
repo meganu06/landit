@@ -8,7 +8,7 @@ jest.mock('../../supabase/client', () => ({
   },
 }));
 
-// Pull out the pure functions via re-export trick —
+// Pull out the pure functions via re-export trick -
 // since they are not exported we test behaviour through observable outputs.
 // We import runMatchingForUser to test the DB-integrated path separately.
 import { runMatchingForUser } from '../matching.service';
@@ -105,8 +105,8 @@ async function getInsertedRow(userSkills: { name: string }[], placementSkills: o
 // ─────────────────────────────────────────────────────────────────────────────
 // MATCH SCORING
 // ─────────────────────────────────────────────────────────────────────────────
-describe('calculateMatchScore — required skills', () => {
-  it('scores 100 when student has all required skills', async () => {
+describe('calculateMatchScore - required skills', () => {
+  it('UT-011: calculateMatchScore() returns 0-100 score - all required skills matched', async () => {
     const row = await getInsertedRow(
       [skill('React'), skill('TypeScript'), skill('Node.js')],
       [req('React'), req('TypeScript'), req('Node.js')]
@@ -114,7 +114,7 @@ describe('calculateMatchScore — required skills', () => {
     expect(row.fit_score).toBe(100);
   });
 
-  it('scores 0 when student has no skills at all', async () => {
+  it('UT-011: calculateMatchScore() returns 0-100 score - scores 0 with no skills', async () => {
     const row = await getInsertedRow(
       [],
       [req('React'), req('Python')]
@@ -155,7 +155,7 @@ describe('calculateMatchScore — required skills', () => {
   });
 });
 
-describe('calculateMatchScore — preferred skills', () => {
+describe('calculateMatchScore - preferred skills', () => {
   it('scores > 0 when student only matches preferred skills', async () => {
     const row = await getInsertedRow(
       [skill('Docker')],
@@ -180,7 +180,7 @@ describe('calculateMatchScore — preferred skills', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // SKILL ALIASES
 // ─────────────────────────────────────────────────────────────────────────────
-describe('skillMatches — alias resolution', () => {
+describe('skillMatches - alias resolution', () => {
   it('matches "js" on CV to "javascript" on placement', async () => {
     const row = await getInsertedRow(
       [skill('js')],
@@ -234,7 +234,7 @@ describe('skillMatches — alias resolution', () => {
 // GAP ANALYSIS
 // ─────────────────────────────────────────────────────────────────────────────
 describe('gap analysis report', () => {
-  it('lists missing required skills correctly', async () => {
+  it('UT-013: gap_analysis_report.skills_missing - lists missing required skills correctly', async () => {
     const row = await getInsertedRow(
       [skill('React')],
       [req('React'), req('Python'), req('Docker')]
@@ -243,7 +243,7 @@ describe('gap analysis report', () => {
     expect(row.gap_analysis_report.skills_missing).toContain('Docker');
   });
 
-  it('does not list matched skills as missing', async () => {
+  it('UT-013: gap_analysis_report.skills_missing - matched skills not listed as missing', async () => {
     const row = await getInsertedRow(
       [skill('React'), skill('Python')],
       [req('React'), req('Python')]
@@ -272,7 +272,7 @@ describe('gap analysis report', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // DATABASE INTEGRATION (runMatchingForUser)
 // ─────────────────────────────────────────────────────────────────────────────
-describe('runMatchingForUser — DB integration', () => {
+describe('runMatchingForUser - DB integration', () => {
   it('throws if student_skills query fails', async () => {
     mockFrom.mockImplementation((table: string) => {
       if (table === 'student_skills') {

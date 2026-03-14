@@ -92,7 +92,7 @@ describe('anonymize — phone numbers', () => {
 // NAMED ENTITIES (compromise NLP)
 // ─────────────────────────────────────────────────────────────────────────────
 describe('anonymize — named entities', () => {
-  it('replaces an email address', () => {
+  it('UT-009: anonymize() strips email before OpenAI — replaces email address', () => {
     const result = anonymize('Contact me at john.doe@example.com');
     expect(result).not.toContain('john.doe@example.com');
     expect(result).toContain('<EMAIL>');
@@ -108,7 +108,7 @@ describe('anonymize — combined and edge cases', () => {
     expect(anonymize('')).toBe('');
   });
 
-  it('replaces multiple sensitive items in one string', () => {
+  it('UT-009: anonymize() strips PII — replaces multiple sensitive items in one string', () => {
     const result = anonymize(
       'SSN: 123-45-6789, email: jane@example.com, site: https://jane.dev'
     );
@@ -117,7 +117,7 @@ describe('anonymize — combined and edge cases', () => {
     expect(result).toContain('<URL>');
   });
 
-  it('leaves non-sensitive text unchanged', () => {
+  it('UT-009: anonymize() strips PII — leaves non-sensitive text unchanged', () => {
     const input = 'I have experience with React, TypeScript, and Node.js.';
     const result = anonymize(input);
     expect(result).toContain('React');
