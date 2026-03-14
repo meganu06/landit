@@ -37,12 +37,12 @@ const SKILL_ALIASES: Record<string, string[]> = {
 // FLOOR_BOOST      bonus added when at least 1 required skill is matched
 // BASE_BOOST       flat bonus added to every non-zero score
 // LOW_CAP_MAX      max score when requiredCoverage < 0.2
-const REQ_CURVE_POWER = 0.3;  // very aggressive curve — raise toward 1.0 to be stricter
-const REQ_WEIGHT      = 70;   // lower = required skills hurt less
-const PREF_WEIGHT     = 30;   // raise = preferred skills rewarded more
-const FLOOR_BOOST     = 15;   // big floor for any partial match
-const BASE_BOOST      = 10;   // flat bonus on every non-zero score
-const LOW_CAP_MAX     = 50;   // generous even for weak matches
+const REQ_CURVE_POWER = 0.7;  // very aggressive curve — raise toward 1.0 to be stricter
+const REQ_WEIGHT      = 85;   // lower = required skills hurt less
+const PREF_WEIGHT     = 15;   // raise = preferred skills rewarded more
+const FLOOR_BOOST     = 0;   // big floor for any partial match
+const BASE_BOOST      = 5;   // flat bonus on every non-zero score
+const LOW_CAP_MAX     = 20;   // generous even for weak matches
 // ─────────────────────────────────────────────────────────────────────────────
 
 function skillMatches(studentName: string, placementName: string): boolean {
