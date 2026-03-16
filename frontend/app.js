@@ -14,6 +14,7 @@ let userSkills = []; // [{skill_name, proficiency_level, id, skills:{name}}]
 let allPlacements = []; // placements with companies + placement_skills
 let matchScores = {}; // placement_id → score
 let pendingRole = 'student'; // set when user picks a role on landing
+let hasCV = false;
 
 function selectRole(role) {
 pendingRole = role;
@@ -133,6 +134,7 @@ const { data } = await sb
 .limit(1)
 .maybeSingle();
 
+hasCV = !!data;
 const container = document.getElementById('cv-current');
 if (data) {
 const date = new Date(data.uploaded_at).toLocaleDateString();
@@ -422,6 +424,10 @@ const sorted = [...allPlacements]
 .slice(0, 5);
 
 const el = document.getElementById('top-matches-list');
+if (!hasCV) {
+el.innerHTML = `<div class="empty-state"><div class="icon">📄</div><p>Please upload your CV to get personalised recommendations.</p><button class="btn btn-primary btn-sm" style="margin-top:0.75rem;" onclick="switchTab('cv');document.querySelectorAll('#dashboard .tab-btn').forEach((b,i)=>{b.classList.toggle('active',i===3)})">Upload CV</button></div>`;
+return;
+}
 if (!sorted.length) {
 el.innerHTML = `<div class="empty-state"><div class="icon">🎯</div><p>No placements available yet.</p></div>`;
 return;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadCV, getMyCV, extractSkills } from '../controllers/cv.controller';
+import { uploadCV, getMyCV, extractSkills, deleteCV } from '../controllers/cv.controller';
 import { requireAuth } from '../middleware/auth';
 
 const upload = multer({
@@ -13,5 +13,6 @@ const router = Router();
 router.post('/upload', requireAuth, upload.single('cv'), uploadCV);
 router.post('/extract-skills', requireAuth, extractSkills);
 router.get('/me', requireAuth, getMyCV);
+router.delete('/:id', requireAuth, deleteCV);
 
 export default router;

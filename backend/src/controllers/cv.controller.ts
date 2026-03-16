@@ -159,6 +159,47 @@ export async function extractSkills(req: AuthRequest, res: Response): Promise<vo
   res.json({ skills: skillIds });
 }
 
+export async function deleteCV(req: AuthRequest, res: Response): Promise<void> {
+  const { id } = req.params;
+  const userId = req.user!.id;
+
+  const { data: cv, error: fetchError } = await supabase
+    .from('cvs')
+    .select('id, file_url')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (fetchError) {
+    res.status(500).json({ error: fetchError.message });
+    return;
+  }
+
+  if (!cv) {
+    res.status(404).json({ error: 'CV not found' });
+    return;
+  }
+
+  // Derive storage path from the public URL and remove the file
+  const storagePathMatch = cv.file_url.match(/\/cvs\/(.+)$/);
+  if (storagePathMatch) {
+    await supabase.storage.from('cvs').remove([storagePathMatch[1]]);
+  }
+
+  const { error: deleteError } = await supabase
+    .from('cvs')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (deleteError) {
+    res.status(500).json({ error: deleteError.message });
+    return;
+  }
+
+  res.json({ message: 'CV deleted successfully' });
+}
+
 export async function getMyCV(req: AuthRequest, res: Response): Promise<void> {
   const { data, error } = await supabase
     .from('cvs')
