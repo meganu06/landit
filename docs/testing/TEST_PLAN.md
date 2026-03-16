@@ -21,8 +21,8 @@
 | POST /cv/upload with valid PDF | 201 + CV record |
 | POST /cv/extract-skills with valid text | 200 + skills array |
 | POST /cv/extract-skills with text < 20 chars | 400 error |
-| POST /cv/extract-skills — auto-matching triggered | matching service called |
-| POST /cv/extract-skills — matching fails | still returns 200 |
+| POST /cv/extract-skills - auto-matching triggered | matching service called |
+| POST /cv/extract-skills - matching fails | still returns 200 |
 | GET /cv/me with no CV uploaded | 404 error |
 | GET /cv/me with existing CV | 200 + CV record |
 
@@ -45,7 +45,7 @@
 | Test | Expected |
 |---|---|
 | POST /match/run | 200 + message |
-| POST /match/run — matching service throws | 500 error |
+| POST /match/run - matching service throws | 500 error |
 | GET /match/results | 200 + array ordered by fit_score |
 | GET /match/results?minScore=50 | only results ≥50 |
 | GET /match/gap-analysis/:id (no match result) | 404 error |
